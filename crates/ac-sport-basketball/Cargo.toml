@@ -12,3 +12,6 @@ workspace = true
 
 [dependencies]
 ac-domain.workspace = true
+serde.workspace = true
+serde_yaml.workspace = true
+indexmap.workspace = true

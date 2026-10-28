@@ -6,13 +6,28 @@ version = 4
 name = "ac-app"
 version = "0.1.0"
 dependencies = [
+ "ac-domain",
+ "ac-sport-basketball",
+ "ac-store-idb",
  "app-shell",
  "dioxus",
+ "dirs",
+ "indexmap",
+ "open",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tokio",
 ]
 
 [[package]]
 name = "ac-domain"
 version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "serde",
+ "serde_yaml",
+]
 
 [[package]]
 name = "ac-live"
@@ -26,6 +41,9 @@ name = "ac-sport-basketball"
 version = "0.1.0"
 dependencies = [
  "ac-domain",
+ "indexmap",
+ "serde",
+ "serde_yaml",
 ]
 
 [[package]]
@@ -34,6 +52,8 @@ version = "0.1.0"
 dependencies = [
  "ac-domain",
  "infinite-db",
+ "serde",
+ "serde_json",
  "tempfile",
 ]
 
@@ -2637,6 +2657,8 @@ checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
 dependencies = [
  "equivalent",
  "hashbrown 0.17.1",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -2650,8 +2672,9 @@ dependencies = [
 
 [[package]]
 name = "infinite-db"
-version = "0.4.1"
-source = "git+https://github.com/joneseysinno/infinitedb.git?rev=d193986e96331f0cf9bfc1bc0d9cc15e72b8c8e4#d193986e96331f0cf9bfc1bc0d9cc15e72b8c8e4"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f75748ebfd3d09c5a287a772444e274e2d067eb94d28a3d155f0feffdbb45fa"
 dependencies = [
  "arc-swap",
  "bincode",
@@ -2688,6 +2711,25 @@ name = "ipnet"
 version = "2.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "791930b43c0d5973160d90a8f3894509f2b273430f5c5c73b668636d0287c5c0"
+
+[[package]]
+name = "is-docker"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "928bae27f42bc99b60d9ac7334e3a21d10ad8f1835a4e12ec3ec0464765ed1b3"
+dependencies = [
+ "once_cell",
+]
+
+[[package]]
+name = "is-wsl"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "173609498df190136aa7dea1a91db051746d339e18476eed5ca40521f02d7aa5"
+dependencies = [
+ "is-docker",
+ "once_cell",
+]
 
 [[package]]
 name = "itertools"
@@ -3577,6 +3619,16 @@ name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
+
+[[package]]
+name = "open"
+version = "5.4.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d8c8b8e725ad26404d6896eb2f064294a0a7b4f1d9120210d85544684c4ca95"
+dependencies = [
+ "is-wsl",
+ "libc",
+]
 
 [[package]]
 name = "openssl"
@@ -4770,6 +4822,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_yaml"
+version = "0.9.34+deprecated"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47"
+dependencies = [
+ "indexmap",
+ "itoa",
+ "ryu",
+ "serde",
+ "unsafe-libyaml",
+]
+
+[[package]]
 name = "servo_arc"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5613,6 +5678,12 @@ name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
+
+[[package]]
+name = "unsafe-libyaml"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "untrusted"

@@ -18,3 +18,13 @@ web = ["dioxus/web"]
 [dependencies]
 app-shell.workspace = true
 dioxus = { workspace = true, features = ["lib", "launch", "logger"] }
+ac-domain.workspace = true
+ac-sport-basketball.workspace = true
+ac-store-idb.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+indexmap.workspace = true
+dirs = "6"
+open = "5"
+tokio = { version = "1", features = ["time"] }

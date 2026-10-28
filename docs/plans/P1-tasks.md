@@ -14,8 +14,10 @@
 |---|---|---|
 | T00 | ✅ built + cloud-verified · **gym run pending (M0)** | `spikes/tracer/README.md` has the gym script. wasm build not verified in the cloud; run `build.ps1` on the laptop |
 | T01 | ✅ done 2026-10-28 | CI green; `cargo run -p ac-app` opens the shell (app-shell `v0.1.0`) |
-| T11a | ✅ done 2026-10-28 | → **D-037**: pin git `d193986` (0.4.1 unpublished); 32-bit dims; IDB-B1 `query_bbox` drops records, IDB-B2 `count_incident_edges_for_endpoint` returns 0 — both worked around in the adapter |
-| next | **Gate G1** (accept D-025…D-034), then T02 ∥ T04 | |
+| T11a | ✅ done 2026-10-28 | → **D-037**: pin crates.io **`=0.4.0`** (AJ; 0.4.1 unpublished); no `register_or_get_space` → `DuplicateId` = already open; 32-bit dims (IDB-B3 aliasing at 8 bits); IDB-B1 `query_bbox` drops records → full-query replay |
+| T02–T10, T11 | ✅ done 2026-10-28 (D-038 re-order) | Domain types, resolver, validator, renderer, estimates, practice metrics, play graph, `Store` + `MemStore` + contract, `IdbStore` (JSON envelope); fixture oracle reproduced in Rust |
+| **S1–S5** (new, D-038) | ✅ done 2026-10-28 | **Studio v1**: Game designer (≈ P2 D01–D05, D08–D13 at v1 depth), Practice planner (T23 expanded), Play designer (P5 v1), Library, Settings — see `P1-execution.md` § Studio v1 |
+| next | **AJ tests the Studio** (E3 games, E6 practice, team sets) → gaps → fixes. **T12–T27 (live) move to the next phase** (D-038) | |
 
 ## Stage 0 — Tracer (P-1)
 
@@ -44,7 +46,7 @@
 |---|---|---|---|---|
 | T10 | **Store trait + MemStore + contract test suite**; the store-thread channel API the hub uses (so MemStore and IdbStore are interchangeable behind it) | S14 §7; D-036 | T08 | Contract tests pass on MemStore |
 | T11a | ✅ **InfiniteDB readiness** (done — D-037) | S14 §1.3 | T01 | `crates/ac-store-idb/tests/idb_api_surface.rs` |
-| T11 | **IdbStore: entities + edges.** Spaces `ac.entity/edges/meta` (32-bit dims), id minting, envelope, stack order in edge metadata; incident counts via the incidence query (IDB-B2) | S14 §2–4; D-024, D-037 | T10, T11a, **Gate G2** | Contract tests pass on IdbStore; S14-T1…T3, T6 |
+| T11 | **IdbStore: entities + edges.** Spaces `ac.entity/edges/meta` (32-bit dims; open-or-register via `DuplicateId`), id minting, envelope, stack order in edge metadata | S14 §2–4; D-024, D-037 | T10, T11a, **Gate G2** | Contract tests pass on IdbStore; S14-T1…T3, T6 |
 | T12 | **IdbStore: live log.** `ac.log`, append+sync, read (full query + session filter, IDB-B1), open sessions; dedicated store thread with a channel API | S14 §6; D-036, D-037 | T11 | S14-T4 (crash), S14-T5 (p95 < 150 ms on AJ's laptop, printed by a bench) |
 
 ## Stage C — Hub logic (pure Rust, `ac-live`)

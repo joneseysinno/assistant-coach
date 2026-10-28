@@ -1,6 +1,6 @@
 # P1 — Execution Plan
 
-> Status: **in execution** (approved 2026-10-28: "execute") · Companion to `P1-tasks.md` (the *what*); this file is the *how and when*: order, lanes, gates, gym milestones, the Cursor session protocol and tripwires.
+> Status: **re-ordered by D-038 (Studio first)** — the Studio is built; live tasks move to the next phase. Originally approved 2026-10-28: "execute" · Companion to `P1-tasks.md` (the *what*); this file is the *how and when*: order, lanes, gates, gym milestones, the Cursor session protocol and tripwires.
 > It does **not** change scope. Proposals P-1…P-5 were **accepted** with the go-ahead and are applied in `P1-tasks.md`.
 
 ## Progress
@@ -9,9 +9,36 @@
 |---|---|---|
 | 2026-10-28 | Wave 0: G0 decisions (D-017, D-018, D-019, D-023) accepted; P-1…P-5 applied to `P1-tasks.md`; stale refs fixed | done (`git init` still to do on the laptop) |
 | 2026-10-28 | **T01** workspace scaffold | ✅ CI green (boundary check, fixture oracle 13/13, fmt, clippy -D warnings, tests); `ac-app` opens the shell |
-| 2026-10-28 | **T11a** InfiniteDB readiness | ✅ → D-037: git pin `d193986`; 32-bit dims; IDB-B1/B2 found, worked around, `#[ignore]` tests track them |
+| 2026-10-28 | **T11a** InfiniteDB readiness | ✅ → D-037: first a git pin, then **AJ: use crates.io `=0.4.0`** (re-verified the same day). 32-bit dims (IDB-B3), full-query log replay (IDB-B1), open-or-register via `DuplicateId` |
 | 2026-10-28 | **T00** tracer bullet | ✅ built + verified in the cloud (tests, real-browser drop test, hub window). **Wasm build + gym run = M0, on the laptop** |
-| next | **M0 at practice**, **Gate G1**, then Wave 2 (T02 ∥ T04) | |
+| 2026-10-28 | **D-038: Studio first** (AJ: "I can't test an app that is not built") | Order flipped; live hub/Board/Remote → next phase |
+| 2026-10-28 | **Studio v1** — T02–T11 domain/pack/store + Game, Practice, Play designers, Library, Settings, exports | ✅ CI green (47 tests, boundary check, 13/13 fixture oracle, clippy -D warnings); driven end-to-end in the cloud (edit → undo → reopen → print) |
+| next | **AJ tests the Studio**: build E3 games, one real practice (E6), team sets; log gaps in `validation/gap-log.md`. Then M0 + live phase | |
+
+
+## Studio v1 — what's in it (D-038)
+
+Run: `cargo run -p ac-app` (first run seeds the Library with the fixtures; data lives in `%LOCALAPPDATA%\AssistantCoach`, override with `AC_DATA_DIR`).
+
+| Document | You can | Panels |
+|---|---|---|
+| **Game** (SSG) | Pick format/roles/space/start/restart/rotation/end/shot clock/balls; add constraints from 12 starters or blank; edit rules by form (trigger, after/within, consequences, judge, say); dials with bounds; suppress/reorder; **rollback slider**; drag players on the court; zones shown | Stack · Constraint library · Properties · Checks (resolver + linter in coaching words) · Predicted effects · Card preview; export **card (HTML/print)** and **YAML** |
+| **Practice** | Blocks (game or note, minutes, groups, basket); reorder; pick games from Library | Games · Metrics (time, active ratio, load, target mix, interleaving); **printed plan** |
+| **Play** | Start 5-out; drag players, give ball, add step, **branch on a read**; playback; actions auto-detected from movement | Graph · Properties (guard, timing, actions) · Reads (trained-by, **generate a game from a read**, link a game) |
+| **Library** | Search, filter by kind/target, open, duplicate, delete (two-step; warns when a play links the game) | — |
+| **Settings** | Court preset (hs/ms/ncaa/nba) | — |
+
+Undo/redo: Ctrl+Z / Ctrl+Y (coalesces typing within 1.5 s). Every edit autosaves.
+
+### Known limits (v1)
+- Zones are shown and edited in Properties, not drawn on the canvas yet (D06 drawing).
+- No variants/progression ladder UI (D07); YAML import is not wired (export only).
+- Practice is a single timeline (no multi-basket lanes, no roster/groups-from-roster).
+- Wasm/web build not attempted in the cloud (proxy blocks the target download) — only matters for live.
+
+### JoInn app-shell bugs found (worked around in `ac-app`)
+1. **Lone keyed child is not re-keyed.** `PanelSlot`, the status host and nav-pane `DocHost`/`ViewHost` render `rsx!{ Child { key: "{id}" } }` with a single child; Dioxus ignores `key` outside a list, so switching documents reuses the scope → hook-order panics and `use_context_provider` keeps a **stale DocId**. Workaround: every view is a hook-free wrapper around a `#[component] XBody`, and panels read `shell.active_document()` instead of context. Fix upstream: render the child inside a one-item keyed `for` list, or key the parent element.
+2. **Shortcuts.** Only bare keys or Shift+key are matched (Ctrl/Meta combos are dropped), and Shift+letter fires while typing in inputs. Workaround: no letter shortcuts; Ctrl+Z/Y via a `keydown` listener that skips INPUT/TEXTAREA/SELECT. Fix upstream: match full modifier sets and skip editable targets.
 
 ---
 
@@ -210,7 +237,7 @@ STOP  If the spec is silent or ambiguous: do NOT choose. Write the question at t
 | Now | Rough Cursor pace: sessions per week? |
 | Now (E3) | Describe the 10 games you actually run; I'll encode them and log any gaps |
 | Before T05 (G1) | Accept D-025…D-034 (most came straight from the stress set) |
-| Before T11 (G2) | ~~S14 Q1~~ answered by T11a (D-037: local = GitHub `d193986`, crates.io has no 0.4.1). Still open: accept D-024 as amended; S14 Q2: one DB per install? |
+| Before T11 (G2) | ~~S14 Q1~~ answered: pin crates.io 0.4.0 (D-037). Still open: accept D-024 as amended; S14 Q2: one DB per install? |
 | Before T13 (G3) | Accept D-035/D-036; king-of-the-court loser goes to the **back** of the queue (G-06 default)? |
 | Before T21 (G4) | Confirm coach + 1–2 scorers at once (Q2) |
 | Before M5 | One real practice written as YAML (E6) using real games |

@@ -29,8 +29,9 @@
 | Fractal architecture / "cell" entity | Not started | None for P1 |
 
 ### 1.3 Pin
-- ~~Pin `infinite-db = "=0.4.1"`~~. **Result of the readiness task (P1 T11a, D-037):** crates.io stops at 0.4.0, so P1 pins the **git commit `d193986`** (0.4.1 = GitHub `main` = the local tree). `crates/ac-store-idb/tests/idb_api_surface.rs` calls every API in §1.1 and checks the behaviours this spec relies on.
-- T11a also found two InfiniteDB bugs, worked around in the adapter (D-037): **IDB-B1** `query_bbox` drops records → §6 replays with a full query; **IDB-B2** `count_incident_edges_for_endpoint` returns 0 → count with the incidence query.
+- ~~Pin `infinite-db = "=0.4.1"`~~. **Result of the readiness task (P1 T11a) + AJ's call (D-037): pin crates.io `infinite-db = "=0.4.0"`** (0.4.1 is unpublished). `crates/ac-store-idb/tests/idb_api_surface.rs` calls every API in §1.1 that 0.4.0 has and checks the behaviours this spec relies on.
+- Differences from §1.1 on 0.4.0: **no `register_or_get_space`** — "open or register" treats `SpaceError::DuplicateId` as already registered (spaces persist across reopen).
+- InfiniteDB bugs found (D-037): **IDB-B1** `query_bbox` drops records → §6 replays with a full query; **IDB-B3** the 8-bit default aliases out-of-range coordinates → 32 bits/dim everywhere (§2). (IDB-B2 is a 0.4.1-only regression; a test guards the upgrade.)
 - Only `ac-store-idb` depends on `infinite-db` (D-017). A contract test suite in `ac-domain` runs against both the in-memory store and the IDB store, so a later InfiniteDB upgrade is "make the contract tests pass again".
 
 ## 2. Spaces we register
@@ -43,7 +44,7 @@
 | `ac.log` | 103 | 2 | `[session_serial, seq]` | one live log entry (S11) |
 | `ac.meta` | 104 | 1 | `[key]` | schema version, id counters |
 
-**Bits per dimension (D-037):** every space above registers with `.with_bits_per_dim(32)`. InfiniteDB's default is 8, which rejects any coordinate above 255 (serials and seqs pass that in the first practice). 32 bits × at most 3 dims = 96 ≤ InfiniteDB's 128-bit key.
+**Bits per dimension (D-037):** every space above registers with `.with_bits_per_dim(32)`. InfiniteDB's default is 8; on 0.4.0 a coordinate above 255 is silently aliased onto a smaller one and **overwrites** it (IDB-B3) — serials and seqs pass 255 in the first practice. 32 bits × at most 3 dims = 96 ≤ InfiniteDB's 128-bit key.
 
 **Identity (D-024):** `EntityId(u64)` is minted by the adapter from `ac.meta` counters. Its storage address is `[kind_ordinal, serial]` — a coordinate that carries **no meaning** beyond "this is entity N of kind K". Domain code sees only `GameId`, `ConstraintId`, … newtypes. When InfiniteDB gains intrinsic ids, only the adapter's address function changes.
 
@@ -54,7 +55,7 @@ Kind ordinals: 1 Game · 2 Constraint · 3 Variant · 4 Read · 5 Play · 6 Stat
 ```rust
 struct Envelope { schema: u16, kind: u16, id: u64, body: Vec<u8> }  // bincode 2
 ```
-- `body` = the domain struct serialized with serde (bincode). YAML is never stored.
+- ~~`body` = the domain struct serialized with serde (bincode).~~ **Amended by D-038:** the record is a JSON envelope `{schema, doc}` (serde_json), so documents written by an older build still load after fields are added (every domain struct keeps unknown fields in `extra`). YAML is never stored.
 - **Migration:** on load, `schema < CURRENT` runs `migrate_<kind>_<from>_<to>` functions in order; the store writes back the upgraded record lazily (on next save). Migration functions get fixture tests.
 - Update = insert a new record at the same address (latest revision wins); delete = `delete` (tombstone). History is available as-of revision for free.
 

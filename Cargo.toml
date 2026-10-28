@@ -35,9 +35,14 @@ ac-live = { path = "crates/ac-live" }
 dioxus = { version = "0.7", default-features = false }
 app-shell = { git = "https://github.com/joneseysinno/JoInn-Template", tag = "v0.1.0" }
 
-# Storage. crates.io has no 0.4.1 (latest published is 0.4.0), so P1 pins the git commit
-# that is 0.4.1 — GitHub main == AJ's local tree on 2026-10-28 (T11a, D-037).
-infinite-db = { git = "https://github.com/joneseysinno/infinitedb.git", rev = "d193986e96331f0cf9bfc1bc0d9cc15e72b8c8e4" }
+# Storage. Pinned to the crates.io release (AJ, 2026-10-28; D-037). 0.4.1 is unpublished.
+infinite-db = "=0.4.0"
+
+# shared
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+indexmap = { version = "2", features = ["serde"] }
 
 # dev
 tempfile = "3"

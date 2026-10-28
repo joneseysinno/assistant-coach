@@ -44,10 +44,11 @@ Status: **Open** · **→ D-xxx** (became a decision) · **→ Sxx** (spec chang
 
 | Id | Task | Gap | Resolution |
 |---|---|---|---|
-| G-P01 | T11a | crates.io has no `infinite-db` 0.4.1 | → D-037 git pin |
-| G-P02 | T11a | Default 8 bits/dim caps coordinates at 255 | → D-037, S14 §2 |
+| G-P01 | T11a | crates.io has no `infinite-db` 0.4.1 | → D-037: AJ pinned crates.io `=0.4.0` |
+| G-P02 | T11a | Default 8 bits/dim: 0.4.0 aliases coordinates > 255 onto smaller ones and overwrites them (IDB-B3) | → D-037: 32 bits/dim; S14 §2 |
 | G-P03 | T11a | IDB-B1: `query_bbox` drops records | → D-037 workaround; S14 §6 |
-| G-P04 | T11a | IDB-B2: `count_incident_edges_for_endpoint` returns 0 | → D-037 workaround |
+| G-P04 | T11a | IDB-B2: `count_incident_edges_for_endpoint` returns 0 — 0.4.1 only | Not in 0.4.0; regression test guards the upgrade |
+| G-P06 | T11a | 0.4.0 has no `register_or_get_space` | → D-037: `DuplicateId` = already registered |
 | G-P05 | T00 | Chrome keeps a dead WebSocket "open" for > 5 s with Wi-Fi off, so the Remote kept saying *connected* | Abandon the socket on a 4 s heartbeat timeout → carried into T20a's spec line |
 
 ## Real games (W3.1) — waiting on AJ

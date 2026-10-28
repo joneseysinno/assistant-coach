@@ -10,8 +10,8 @@ use infinite_db::infinitedb_core::hyperedge::{
     HyperedgeKind,
 };
 use infinite_db::infinitedb_core::query::DirectionFilter;
-use infinite_db::infinitedb_core::space::SpaceConfig;
-use infinite_db::{InfiniteDb, OpenOptions};
+use infinite_db::infinitedb_core::space::{SpaceConfig, SpaceError};
+use infinite_db::{EngineError, InfiniteDb, OpenOptions};
 use tempfile::TempDir;
 
 use ac_store_idb::spaces;
@@ -61,17 +61,32 @@ fn edge(id: u64, kind: &str, tail: (u32, u32), head: (u32, u32), order: &str) ->
     }
 }
 
-/// S14 §2: `register_or_get_space` is idempotent, so the adapter can call it on every open.
+/// S14 §2 on 0.4.0 (no `register_or_get_space`): registered spaces persist across reopen,
+/// and registering again returns `DuplicateId`. The adapter's "open or register" treats
+/// `DuplicateId` as "already there" (D-037).
 #[test]
-fn register_or_get_space_is_idempotent() {
-    let (db, _dir) = open();
-    let a = db
-        .register_or_get_space(space(ENTITY, "ac.entity", 2))
-        .unwrap();
-    let b = db
-        .register_or_get_space(space(ENTITY, "ac.entity", 2))
-        .unwrap();
-    assert_eq!(a, b);
+fn spaces_persist_and_re_registering_reports_duplicate_id() {
+    let dir = TempDir::new().unwrap();
+    {
+        let db = InfiniteDb::open(dir.path()).unwrap();
+        db.register_space(space(ENTITY, "ac.entity", 2)).unwrap();
+        db.insert(ENTITY, at(1, 1), b"x".to_vec()).unwrap();
+        db.sync().unwrap();
+    }
+    let db = InfiniteDb::open(dir.path()).unwrap();
+    let again = db.register_space(space(ENTITY, "ac.entity", 2));
+    assert!(
+        matches!(
+            again,
+            Err(EngineError::RegistrySpace(SpaceError::DuplicateId(id))) if id == ENTITY
+        ),
+        "got {again:?}"
+    );
+    assert_eq!(
+        db.query(ENTITY, None).unwrap().len(),
+        1,
+        "space and data survived reopen"
+    );
 }
 
 /// D-024: serials and log seqs exceed 255, so spaces need more than the 8-bit default.
@@ -86,31 +101,39 @@ fn large_coordinates_round_trip_with_32_bit_dims() {
     assert_eq!(rows[0].address.point, p);
 }
 
-/// Records what the 8-bit default does with an out-of-range coordinate, so S14 can say
-/// why `BITS_PER_DIM` is required. Either an error or a lossy key is a reason to set it.
+/// IDB-B3 (found on 0.4.0): a space at the default 8 bits/dim *accepts* out-of-range
+/// coordinates and aliases them — `[1,300]` overwrites `[1,44]` (300 − 256). Silent data
+/// loss, which is why every Assistant Coach space uses `BITS_PER_DIM = 32` and why the
+/// adapter must never mint a coordinate above `u32::MAX`. (0.4.1 rejects the insert instead.)
+/// This test only prints what the pinned version does; the guard is the next test.
 #[test]
-fn default_8_bit_space_does_not_preserve_large_coordinates_in_bbox() {
+fn default_8_bit_space_behaviour_is_recorded() {
     let dir = TempDir::new().unwrap();
     let db = InfiniteDb::open(dir.path()).unwrap();
     let s = SpaceId(900);
     db.register_space(SpaceConfig::new(s, "narrow", 2)).unwrap();
-    let inserted = db.insert(s, DimensionVector::new(vec![1, 300]), vec![1]);
-    let outcome = match inserted {
-        Err(e) => format!("insert rejected: {e:?}"),
-        Ok(_) => {
-            db.sync().unwrap();
-            let hits = db
-                .query_bbox(
-                    s,
-                    DimensionVector::new(vec![1, 300]),
-                    DimensionVector::new(vec![1, 300]),
-                    None,
-                )
-                .unwrap();
-            format!("insert accepted; exact bbox hits = {}", hits.len())
-        }
-    };
-    println!("8-bit default with coord 300: {outcome}");
+    let first = db.insert(s, DimensionVector::new(vec![1, 44]), b"a".to_vec());
+    let second = db.insert(s, DimensionVector::new(vec![1, 300]), b"b".to_vec());
+    db.sync().unwrap();
+    let live = db.query(s, None).unwrap().len();
+    println!(
+        "8-bit space: insert [1,44] ok={} · insert [1,300] ok={} · live records = {live} (2 = safe, 1 = aliased)",
+        first.is_ok(),
+        second.is_ok()
+    );
+}
+
+/// Guard for IDB-B3: with the adapter's 32 bits/dim, coordinates that would alias at 8 or
+/// 16 bits stay distinct.
+#[test]
+fn adapter_dims_never_alias() {
+    let (db, _dir) = open();
+    for serial in [44u32, 44 + (1 << 8), 44 + (1 << 16), 44 + (1 << 24)] {
+        db.insert(ENTITY, at(1, serial), serial.to_le_bytes().to_vec())
+            .unwrap();
+    }
+    db.sync().unwrap();
+    assert_eq!(db.query(ENTITY, None).unwrap().len(), 4);
 }
 
 /// S14 §3: update = insert at the same address; the latest revision wins.
@@ -166,8 +189,8 @@ fn log_replay_by_full_query_returns_one_session_in_seq_order() {
     assert_eq!(seqs, (0..50).collect::<Vec<_>>());
 }
 
-/// IDB-B1 (found by T11a, present in 0.4.0 and 0.4.1 @ d193986): `query_bbox` silently
-/// drops records. A `[3,0]..[3,19]` box over a dense 6×20 grid misses (3,1..3) and
+/// IDB-B1 (found by T11a; present in 0.4.0, the pinned version, and in 0.4.1): `query_bbox`
+/// silently drops records. A `[3,0]..[3,19]` box over a dense 6×20 grid misses (3,1..3) and
 /// (3,16..18); the whole-space box is complete. Points to the Hilbert `range_decompose`
 /// boundary handling. Run with `cargo test -- --ignored` after an InfiniteDB upgrade; when
 /// it passes, S14 §6 can go back to bbox replay.
@@ -206,7 +229,6 @@ fn synced_writes_survive_reopen() {
         // dropped here: no explicit close
     }
     let db = InfiniteDb::open(dir.path()).unwrap();
-    db.register_or_get_space(space(LOG, "ac.log", 2)).unwrap();
     assert_eq!(db.query(LOG, None).unwrap().len(), 20);
 }
 
@@ -280,11 +302,10 @@ fn hyperedges_carry_order_metadata_and_are_queryable_every_way_s14_needs() {
     );
 }
 
-/// IDB-B2 (found by T11a): `count_incident_edges_for_endpoint` returns 0 once the
-/// endpoint's own space is registered, while `query_hyperedges_for_endpoint` finds the
-/// edges. The adapter counts with `query_hyperedges_for_endpoint(..).len()` (D-037).
+/// Regression guard for IDB-B2: on 0.4.1 (git `d193986`) `count_incident_edges_for_endpoint`
+/// returns 0 once the endpoint's own space is registered. 0.4.0 — the pinned version — is
+/// correct. If this fails after an upgrade, count with `query_hyperedges_for_endpoint(..).len()`.
 #[test]
-#[ignore = "IDB-B2: count_incident_edges_for_endpoint returns 0 (InfiniteDB bug, D-037)"]
 fn count_incident_edges_matches_incidence_query() {
     let (db, _dir) = open();
     db.insert_hyperedge(

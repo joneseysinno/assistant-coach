@@ -1,4 +1,6 @@
-# P2 — Game Designer (after live, D-016 B)
+# P2 — Game Designer (pulled into P1 by D-038)
+
+> **D-038 (2026-10-28): Studio first.** These designer tasks were pulled forward into P1 and built at v1 depth: D01–D05 and D08–D13 are in the Studio (forms, stack + rollback, checks, predicted effects, card + YAML export, Library). **Still open:** D06 (drawing zones on the canvas), D07 (variants + progression ladder UI), YAML *import*, and D14 (AJ encodes the 10 real games in the app, which is now the main P1 test). The live phase (old P1 T12–T27) is now P2.
 
 > One task = one Cursor session/PR. Builds on P1's domain, resolver, renderer and store. Exit criterion: **the 10 real fixture games are built in the app (not typed as YAML), round-trip through InfiniteDB, and render readable cards; new games export to YAML and run live.**
 
