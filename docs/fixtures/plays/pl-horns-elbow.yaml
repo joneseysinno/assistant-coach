@@ -1,0 +1,27 @@
+# FORMAT EXAMPLE from 02 §8 — not one of the team's real sets (W3.3 still needs those).
+id: pl-horns-elbow
+name: Horns — Elbow Ball Screen
+kind: read-set
+court: half
+roles: [O1, O2, O3, O4, O5]
+states:
+  - { id: s0, label: Horns, ball: O1, at: { O1: [0, 28], O4: [-6, 14], O5: [6, 14], O2: [-21, 1], O3: [21, 1] } }
+  - { id: s1, label: Screen used, ball: O1, at: { O1: [-8, 18], O4: [-6, 14], O5: [6, 14], O2: [-21, 1], O3: [21, 1] } }
+  - { id: s-drop,   label: Pull-up / pocket, ball: O4, at: { O1: [-8, 16], O4: [-3, 6], O5: [6, 14], O2: [-21, 1], O3: [21, 1] } }
+  - { id: s-hedge,  label: Pop / dive,       ball: O4, at: { O1: [-12, 22], O4: [-10, 20], O5: [3, 3], O2: [-21, 1], O3: [21, 1] } }
+  - { id: s-switch, label: Attack the big,  ball: O1, at: { O1: [-4, 8], O4: [-4, 4], O5: [6, 14], O2: [-21, 1], O3: [21, 1] } }
+  - { id: s-help,   label: Lift and kick,    ball: O3, at: { O1: [-8, 16], O4: [-3, 6], O5: [10, 20], O2: [-21, 1], O3: [21, 1] } }
+transitions:
+  - { id: t1, from: s0, to: s1, actions: [ { screen: { by: O4, for: O1 } }, { dribble: { by: O1, to: [-8, 18] } } ], guard: null, timing: "when O4 is set" }
+  - { id: t-drop,   from: s1, to: s-drop,   actions: [ { pass: { from: O1, to: O4 } } ], guard: read.ballscreen.drop }
+  - { id: t-hedge,  from: s1, to: s-hedge,  actions: [ { pass: { from: O1, to: O4 } } ], guard: read.ballscreen.hedge }
+  - { id: t-switch, from: s1, to: s-switch, actions: [ { dribble: { by: O1, to: [-4, 8] } } ], guard: read.ballscreen.switch }
+  - { id: t-help,   from: s1, to: s-help,   actions: [ { pass: { from: O1, to: O3 } } ], guard: read.ballscreen.help-on-roll }
+trained_by:
+  read.ballscreen.drop: [s03-coach-calls-coverage]
+  read.ballscreen.hedge: [s03-coach-calls-coverage]
+  read.ballscreen.switch: [s03-coach-calls-coverage]
+expect:
+  reads: [read.ballscreen.drop, read.ballscreen.hedge, read.ballscreen.switch, read.ballscreen.help-on-roll]
+  untrained: [read.ballscreen.help-on-roll]
+  path_t1_tdrop_seconds: 3.6

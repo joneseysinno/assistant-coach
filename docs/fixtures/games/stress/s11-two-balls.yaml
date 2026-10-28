@@ -1,0 +1,32 @@
+id: s11-two-balls
+name: Two-ball Passing Pressure 4v2
+stage: coordination
+stress: { tests: "More than one ball", result: in-scope-with-limit, decisions: [D-029] }
+format:
+  numbers: 4v2
+  space: { court: half }
+  balls: 2
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: O3, team: offense }
+    - { id: O4, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+  start: { type: coach-pass, from: top, to: O1 }
+  restart: { on_score: rotate, on_stop: rotate }
+  rotation: { type: none }
+  end: { type: time, seconds: 45 }
+constraints:
+  - id: deflection-swap
+    name: Deflection swaps in
+    category: task
+    invites: [passing-under-pressure, eyes-up]
+    preserves: [active-hands-defense]
+    targets: [off.shape.spacing, def.deny.gap]
+    rules:
+      - { id: defl, label: Deflection, when: { event: deflection }, then: [ { tally: true } ], judge: coach, say: "A deflection swaps the passer and defender" }
+notes: "R1: live defenders present. No possession-scoped rules allowed (D-029); a validator test asserts that adding one fails."
+expect:
+  card: ["A deflection swaps the passer and defender"]
+  validator_negative: "adding `after:` to any rule → error D-029"

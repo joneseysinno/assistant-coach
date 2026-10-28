@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Board — tracer</title>
+<style>
+  /* Sizes from S12 §5 / mock-board.html (provisional until the gym readability test). */
+  :root { --red:#e5484d; --blue:#3e63dd; --amber:#f5a524; }
+  html, body { margin:0; height:100%; background:#000; color:#fff; font-family:system-ui,sans-serif; overflow:hidden; }
+  .wrap { display:grid; grid-template-rows:auto auto auto 1fr auto; height:100vh; }
+  .top { display:flex; align-items:center; gap:1.5vw; padding:2vh 3vw; font-size:4.5vh; color:#aaa; }
+  .dot { width:2vh; height:2vh; border-radius:50%; background:var(--amber); }
+  .dot.ok { background:#30a46c; } .dot.bad { background:var(--red); }
+  .scores { display:grid; grid-template-columns:1fr 1fr; text-align:center; }
+  .score { font-size:30vh; font-weight:900; line-height:1; font-variant-numeric:tabular-nums; }
+  .clock { font-size:22vh; font-weight:800; text-align:center; line-height:1.05; font-variant-numeric:tabular-nums; }
+  .paused .clock { opacity:.55; }
+  .amber .clock { color:var(--amber); }
+  .over .clock { color:var(--red); }
+  .rule { font-size:6vh; text-align:center; color:#ddd; align-self:center; }
+  .foot { display:flex; justify-content:space-between; padding:1vh 3vw; font:2.2vh ui-monospace,Consolas,monospace; color:#555; }
+  #unlock { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; flex-direction:column; gap:2vh;
+            align-items:center; justify-content:center; font-size:5vh; cursor:pointer; }
+  #unlock small { font-size:2.6vh; color:#888; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="top"><span class="dot" id="dot"></span><span>Tracer · Red vs Blue</span><span style="margin-left:auto" id="clients"></span></div>
+  <div class="scores">
+    <div class="score" style="color:var(--red)" id="s0">–</div>
+    <div class="score" style="color:var(--blue)" id="s1">–</div>
+  </div>
+  <div class="clock" id="clock">--:--</div>
+  <div class="rule">Rule line sample — make it, take it · 6 vh</div>
+  <div class="foot"><span id="sync"></span><span>F = full screen</span></div>
+</div>
+<div id="unlock">Click once to enable sound<small>(browsers block audio until the page is clicked)</small></div>
+
+<script>
+// T00 tracer Board — throwaway. The hub owns the clock (D-012); the Board only displays
+// remaining = remaining_at_snapshot − (hub_now − snapshot_time), with hub_now estimated
+// from ping/pong (offset from the lowest-RTT sample of the last 20).
+let ws = null, connected = false, state = null, lastHeard = 0;
+let offset = 0, bestRtt = Infinity;
+const samples = [];
+let audio = null, warned = false, horned = false, lastSeq = -1;
+const $ = id => document.getElementById(id);
+
+function connect() {
+  ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen = () => { connected = true; lastHeard = Date.now();
+    ws.send(JSON.stringify({ t: 'hello', role: 'board', device: 'board' })); ping(); };
+  ws.onmessage = e => {
+    lastHeard = Date.now();
+    const m = JSON.parse(e.data);
+    if (m.t === 'state') {
+      if (state && (m.clock.duration_ms !== state.clock.duration_ms || m.clock.remaining_ms > state.clock.remaining_ms + 1500)) {
+        warned = horned = false;                 // clock set or reset: re-arm sounds
+      }
+      state = m;
+    } else if (m.t === 'pong') {
+      const now = Date.now(), rtt = now - m.c;
+      samples.push({ rtt, off: m.s - (m.c + rtt / 2) });
+      if (samples.length > 20) samples.shift();
+      const best = samples.reduce((a, b) => (b.rtt < a.rtt ? b : a));
+      offset = best.off; bestRtt = best.rtt;
+    }
+  };
+  ws.onclose = () => drop(800);
+  ws.onerror = () => drop(800);
+}
+function drop(delay) {
+  const old = ws; ws = null;
+  if (!old) return;
+  old.onopen = old.onmessage = old.onclose = old.onerror = null;
+  try { old.close(); } catch (_) {}
+  connected = false;
+  setTimeout(connect, delay);
+}
+function ping() { if (connected) ws.send(JSON.stringify({ t: 'ping', c: Date.now() })); }
+setInterval(() => {
+  if (connected && Date.now() - lastHeard > 4000) { drop(0); return; }
+  ping();
+}, 1000);
+
+function fmt(ms) {
+  const neg = ms < 0, t = neg ? Math.floor(Math.abs(ms) / 1000) : Math.ceil(ms / 1000);
+  return (neg ? '+' : '') + Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+}
+
+function tone(freq, secs) {
+  if (!audio) return;
+  const o = audio.createOscillator(), g = audio.createGain();
+  o.type = 'square'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.25, audio.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + secs);
+  o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + secs);
+}
+
+function frame() {
+  $('dot').className = 'dot ' + (connected ? 'ok' : 'bad');
+  if (state) {
+    $('s0').textContent = state.score[0];
+    $('s1').textContent = state.score[1];
+    $('clients').textContent = `${state.clients} connected`;
+    const c = state.clock;
+    const rem = c.running ? c.remaining_ms - (Date.now() + offset - state.server_ms) : c.remaining_ms;
+    $('clock').textContent = fmt(rem);
+    const w = $('wrap');
+    w.classList.toggle('paused', !c.running);
+    w.classList.toggle('amber', rem <= 60000 && rem > 0);
+    w.classList.toggle('over', rem <= 0);
+    if (c.running && rem <= 60000 && rem > 0 && !warned) { warned = true; tone(880, 0.25); }
+    if (c.running && rem <= 0 && !horned) { horned = true; tone(220, 1.5); }
+    $('sync').textContent = `offset ${Math.round(offset)} ms · best rtt ${isFinite(bestRtt) ? bestRtt : '–'} ms · seq ${state.seq}`;
+  }
+  requestAnimationFrame(frame);
+}
+
+$('unlock').addEventListener('click', () => {
+  audio = new (window.AudioContext || window.webkitAudioContext)();
+  tone(660, 0.15);
+  $('unlock').remove();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'f' || e.key === 'F') {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen();
+  }
+});
+
+connect(); frame();
+</script>
+</body>
+</html>

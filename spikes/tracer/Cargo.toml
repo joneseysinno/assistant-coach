@@ -1,0 +1,11 @@
+# T00 tracer bullet — THROWAWAY. Deleted when T18 lands (P1-execution.md §2 P-1).
+# Its own workspace so nothing here leaks into the real crates.
+# Guardrail: no domain types, no rules, no store. If you want to add a feature, it belongs in a real task.
+[workspace]
+resolver = "2"
+members = ["hub", "wasm-board"]
+
+[workspace.package]
+edition = "2021"
+version = "0.0.0"
+publish = false

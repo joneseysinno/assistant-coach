@@ -1,0 +1,32 @@
+id: s12-zone-restricted-defender
+name: 3v3 — Help Lives in the Paint
+stage: complex
+stress: { tests: "Role restricted to a zone", result: clean-with-decision, decisions: [D-030, D-025] }
+format:
+  numbers: 3v3
+  space: { court: half }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: O3, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+    - { id: H,  team: defense, label: Help }
+  start: { type: check-ball, spot: top }
+  restart: { on_score: switch, on_stop: switch }
+  rotation: { type: none }
+  end: { type: score, target: 7 }
+base_rules: { two: 1, three: 1 }
+constraints:
+  - id: help-in-paint
+    name: Help stays in the paint
+    category: environment
+    invites: [drive-and-kick, help-recognition]
+    preserves: [help-defense]
+    targets: [off.extend.drive-and-kick, def.scramble.help]
+    roles:
+      - { restrict: H, stay_in: paint }
+reads: [read.help.steps-up, read.help.stays]
+expect:
+  card: ["Basket = 1", "Three = 1", "The help defender must stay in the paint"]
+  buttons_per_team: [Basket, Three, Help left paint]   # compiled from the role edit; credited to the offense (gap G-12b)

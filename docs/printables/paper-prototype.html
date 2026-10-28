@@ -1,0 +1,143 @@
+<!doctype html><html><head><meta charset=utf-8><title>Paper prototype</title><style>
+@page { size: letter; margin: 0.4in; }
+* { box-sizing: border-box; }
+body { font-family: "Segoe UI", Arial, sans-serif; color: #111; margin: 0; background: #fff; }
+.page { page-break-after: always; break-after: page; padding: 0.1in 0; }
+h1 { font-size: 20pt; margin: 0 0 6pt; } h2 { font-size: 12pt; margin: 10pt 0 4pt; border-bottom: 1px solid #999; }
+.dim { color: #666; font-size: 9pt; }
+.deck { display: grid; grid-template-columns: 5in; gap: 0.2in; justify-content: center; }
+.card { width: 5in; height: 3in; border: 1.5px dashed #888; border-radius: 6px; padding: 10px 12px; overflow: hidden; position: relative; font-size: 10.5pt; break-inside: avoid; }
+.card h3 { margin: 2px 0 4px; font-size: 15pt; } .card ul { margin: 2px 0; padding-left: 16px; } .card li { margin: 1px 0; }
+.card .kind { font-size: 7.5pt; letter-spacing: .08em; color: #555; font-weight: 700; }
+.card .meta { font-size: 9pt; color: #333; } .card .dials { list-style: none; padding: 0; margin-top: 6px; border-top: 1px solid #ddd; font-size: 9.5pt; }
+.card .foot { position: absolute; bottom: 8px; left: 12px; right: 12px; font-size: 8pt; color: #444; }
+.card.base { border-style: solid; border-width: 2.5px; } .card.task { border-left: 8px solid #1e88e5; } .card.environment { border-left: 8px solid #43a047; }
+.card.character { border-left: 8px solid #fb8c00; } .card.individual { border-left: 8px solid #8e24aa; }
+.gamecard ul { font-size: 14pt; } .gamecard h1 { font-size: 26pt; } .gamecard .court { width: 3.4in; float: right; margin: 0 0 8pt 12pt; }
+.test { clear: both; margin-top: 14pt; font-size: 9pt; color: #555; border-top: 1px dotted #999; padding-top: 6pt; }
+svg .floor { fill: #faf6ee; stroke: #333; stroke-width: 2; } svg .line { fill: none; stroke: #333; stroke-width: 1.5; }
+svg .rim { fill: none; stroke: #d84315; stroke-width: 2; } svg .board { stroke: #333; stroke-width: 3; }
+svg .bonus { fill: #ffe082; } svg .restrict { fill: #ef9a9a; opacity: .6; }
+table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #555; padding: 4px 6px; font-size: 10pt; vertical-align: top; }
+.remote td.lbl { width: 24%; font-size: 12pt; } .remote td.box { width: 26%; height: 0.55in; } .sched td { height: 0.5in; }
+.tally td { height: 0.42in; } .lines { height: 1.4in; background: repeating-linear-gradient(#fff 0 26px, #bbb 26px 27px); }
+.sketches { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .sk svg { width: 100%; }
+.cover h1 { font-size: 26pt; } .cover li { margin: 4pt 0; font-size: 11pt; }
+@media screen { body { background: #e9e9e9; } .page { background: #fff; width: 8.5in; margin: 16px auto; padding: 0.4in; box-shadow: 0 1px 6px rgba(0,0,0,.2); } }
+</style></head><body><div class="page cover"><h1>Assistant Coach — P0 paper prototype</h1>
+      <p>Generated from the fixtures by <code>tools/make_printables.py</code>; the wording is exactly what the app will render (S2 §7).</p>
+      <ol><li><b>Constraint deck</b> (W4.1) — are the constraints separable? does order matter? do the sentences read clearly?</li>
+      <li><b>Game cards</b> (W4.2) — can an assistant or a player run the game with no explanation?</li>
+      <li><b>Remote button sheets</b> (W4.7) — tick marks instead of taps; do the buttons match what a scorer needs?</li>
+      <li><b>Tally sheet</b> (W4.3–4.5) — how many pinpoints can you track live? dial turns; capture sketches.</li></ol>
+      <p>Log findings in <code>docs/validation/paper-prototype.md</code> and <code>live-dry-run.md</code>.</p></div><div class="page"><p class=dim><b>Constraint deck 1</b> · W4.1 — cut on the dashed lines; stack a base card + constraint cards to build a game; dials print as Level 1/2/3.</p><div class="deck"><div class="card base"><div class="kind">BASE GAME · team-based</div><h3>Closeout Attack 3v3</h3>
+      <div class="meta">3v3 · half court · Same teams the whole block</div>
+      <ul><li>Start: Defense passes out and closes out</li><li>After a score: Ball goes to the other team, play on</li>
+      <li>First to 7</li><li>Basket = 1</li><li>Three = 1</li></ul><ul class=dials><li>Game to: 7</li><li><b>L1</b> 0 ft · <b>L2</b> 6 ft · <b>L3</b> 14 ft <span class=dim>(Closeout starts at)</span></li></ul></div><div class="card task"><div class="kind">TASK CONSTRAINT</div><h3>Kick-out bonus</h3>
+          <ul><li>Three after a paint touch = 3</li></ul>
+          <div class="foot"><b>Invites:</b> drive-and-kick, extra-pass<br><b>Keeps:</b> help-defense, closeout</div></div><div class="card task"><div class="kind">TASK CONSTRAINT</div><h3>Dribble limit</h3>
+          <ul><li>More than 2 dribbles = turnover</li></ul><ul class=dials><li><b>L1</b> 3 · <b>L2</b> 2 · <b>L3</b> 1 <span class=dim>(limit)</span></li></ul>
+          <div class="foot"><b>Invites:</b> quick-decisions, catch-and-attack<br><b>Keeps:</b> defender-pressure, help-defense</div></div></div></div><div class="page"><p class=dim><b>Constraint deck 2</b> · W4.1 — cut on the dashed lines; stack a base card + constraint cards to build a game; dials print as Level 1/2/3.</p><div class="deck"><div class="card environment"><div class="kind">ENVIRONMENT CONSTRAINT</div><h3>Corner zones</h3>
+          <ul><li>Catch in a corner zone after a drive = 1</li></ul>
+          <div class="foot"><b>Invites:</b> relocation, spacing<br><b>Keeps:</b> help-defense</div></div><div class="card character"><div class="kind">CHARACTER CONSTRAINT</div><h3>Hungry</h3>
+          <ul><li>Offensive rebound = 1</li></ul>
+          <div class="foot"><b>Invites:</b> crash-the-glass<br><b>Keeps:</b> box-out-contest</div></div><div class="card base"><div class="kind">BASE GAME · team-based</div><h3>3v3 Quick Score</h3>
+      <div class="meta">3v3 · half court · Same teams the whole block</div>
+      <ul><li>Start: Coach passes to a wing</li><li>After a score: Ball goes to the other team, play on</li>
+      <li>Play until the clock ends</li><li>Basket = 1</li><li>Three = 1</li></ul><ul class=dials><li><b>L1</b> 16 s · <b>L2</b> 12 s · <b>L3</b> 8 s <span class=dim>(Shot clock)</span></li><li><b>L1</b> 8 s · <b>L2</b> 6 s · <b>L3</b> 4 s <span class=dim>(Quick window)</span></li></ul></div></div></div><div class="page"><p class=dim><b>Constraint deck 3</b> · W4.1 — cut on the dashed lines; stack a base card + constraint cards to build a game; dials print as Level 1/2/3.</p><div class="deck"><div class="card task"><div class="kind">TASK CONSTRAINT</div><h3>Catch-and-go bonus</h3>
+          <ul><li>Score within 6 seconds of the catch = 2</li></ul>
+          <div class="foot"><b>Invites:</b> catch-and-attack, quick-decisions<br><b>Keeps:</b> closeouts, help-defense</div></div><div class="card task"><div class="kind">TASK CONSTRAINT</div><h3>Shot clock</h3>
+          <ul></ul>
+          <div class="foot"><b>Invites:</b> urgency<br><b>Keeps:</b> full-defense</div></div><div class="card base"><div class="kind">BASE GAME · team-based</div><h3>4v4 Defense Scores</h3>
+      <div class="meta">4v4 · half court · Same teams the whole block</div>
+      <ul><li>Start: Coach passes to a wing</li><li>After a score: Make it, take it</li>
+      <li>First to 10</li><li>Basket = 1</li><li>Three = 1</li></ul></div></div></div><div class="page"><p class=dim><b>Constraint deck 4</b> · W4.1 — cut on the dashed lines; stack a base card + constraint cards to build a game; dials print as Level 1/2/3.</p><div class="deck"><div class="card character"><div class="kind">CHARACTER CONSTRAINT</div><h3>Defense scores</h3>
+          <ul><li>Stop = +1 for the defense</li><li>Deflection = +1 for the defense</li><li>Charge = +2 for the defense</li></ul>
+          <div class="foot"><b>Invites:</b> help, closeouts, take-charges<br><b>Keeps:</b> live-offense, help-defense</div></div><div class="card base"><div class="kind">BASE GAME · complex</div><h3>3v3 — Help Lives in the Paint</h3>
+      <div class="meta">3v3 · half court · Same teams the whole block</div>
+      <ul><li>Start: Check ball at the top</li><li>After a score: Ball goes to the other team, play on</li>
+      <li>First to 7</li><li>Basket = 1</li><li>Three = 1</li></ul></div><div class="card environment"><div class="kind">ENVIRONMENT CONSTRAINT</div><h3>Help stays in the paint</h3>
+          <ul><li>The help defender must stay in the paint</li></ul>
+          <div class="foot"><b>Invites:</b> drive-and-kick, help-recognition<br><b>Keeps:</b> help-defense</div></div></div></div><div class="page"><p class=dim><b>Constraint deck 5</b> · W4.1 — cut on the dashed lines; stack a base card + constraint cards to build a game; dials print as Level 1/2/3.</p><div class="deck"><div class="card base"><div class="kind">BASE GAME · team-based</div><h3>2v2 Elbow Screen — Coach Calls the Coverage</h3>
+      <div class="meta">3v3 · half court · Same teams the whole block</div>
+      <ul><li>Start: Check ball at the top</li><li>After a score: Ball goes to the other team, play on</li>
+      <li>First to 7</li><li>Basket = 1</li><li>Three = 1</li></ul></div><div class="card task"><div class="kind">TASK CONSTRAINT</div><h3>Beat the coverage</h3>
+          <ul><li>Score with the right counter to the coverage = 2</li></ul>
+          <div class="foot"><b>Invites:</b> read-screen-coverage<br><b>Keeps:</b> screen-defense, help-defense</div></div><div class="card base"><div class="kind">BASE GAME · team-based</div><h3>3v3 + Joker</h3>
+      <div class="meta">3v3 · half court · Same teams the whole block</div>
+      <ul><li>Start: Check ball at the top</li><li>After a score: Ball goes to the other team, play on</li>
+      <li>First to 7</li><li>Basket = 1</li><li>Three = 1</li></ul></div></div></div><div class="page"><p class=dim><b>Constraint deck 6</b> · W4.1 — cut on the dashed lines; stack a base card + constraint cards to build a game; dials print as Level 1/2/3.</p><div class="deck"><div class="card task"><div class="kind">TASK CONSTRAINT</div><h3>Joker can&#x27;t shoot</h3>
+          <ul><li>The joker can&#x27;t shoot</li></ul>
+          <div class="foot"><b>Invites:</b> use-the-overload, extra-pass<br><b>Keeps:</b> live-defense</div></div></div></div><div class="page gamecard"><h1>Closeout Attack 3v3</h1>
+      <div class="court"><svg viewBox="0 0 300 252" width="100%"><rect x="0" y="0" width="300" height="252" class="floor"/><rect x="0" y="0" width="31.5" height="49.5" class="bonus"/><rect x="268.5" y="0" width="31.5" height="49.5" class="bonus"/>
+      <rect x="114" y="0" width="72" height="114" class="line"/>
+      <circle cx="150" cy="114.0" r="36" class="line"/>
+      <path d="M 31.5 0 L 31.5 31.5 A 118.5 118.5 0 0 0 268.5 31.5 L 268.5 0" class="line"/>
+      <circle cx="150" cy="31.5" r="4.5" class="rim"/><line x1="132" y1="24.0" x2="168" y2="24.0" class="board"/></svg></div>
+      <h2>How to score</h2><ul><li>Basket = 1</li><li>Three = 1</li><li>Three after a paint touch = 3</li><li>Catch in a corner zone after a drive = 1</li><li>Offensive rebound = 1</li></ul>
+      <h2>Not allowed</h2><ul><li>More than 2 dribbles = turnover</li></ul>
+      <h2>How it runs</h2><ul><li>Start: Defense passes out and closes out</li><li>After a score: Ball goes to the other team, play on</li>
+        <li>Same teams the whole block</li></ul>
+      <h2>Think about</h2><ul><li>What did the help defender do?</li><li>Where was the open space?</li></ul>
+      <div class="test">Test (W4.2): hand this to an assistant or a player. Can they run the game with no explanation? Note every question they ask: ______________________________</div></div><div class="page gamecard"><h1>3v3 — Help Lives in the Paint</h1>
+      <div class="court"><svg viewBox="0 0 300 252" width="100%"><rect x="0" y="0" width="300" height="252" class="floor"/><rect x="114" y="0" width="72" height="114" class="restrict"/>
+      <rect x="114" y="0" width="72" height="114" class="line"/>
+      <circle cx="150" cy="114.0" r="36" class="line"/>
+      <path d="M 31.5 0 L 31.5 31.5 A 118.5 118.5 0 0 0 268.5 31.5 L 268.5 0" class="line"/>
+      <circle cx="150" cy="31.5" r="4.5" class="rim"/><line x1="132" y1="24.0" x2="168" y2="24.0" class="board"/></svg></div>
+      <h2>How to score</h2><ul><li>Basket = 1</li><li>Three = 1</li></ul>
+      <h2>Not allowed</h2><ul><li>The help defender must stay in the paint</li></ul>
+      <h2>How it runs</h2><ul><li>Start: Check ball at the top</li><li>After a score: Ball goes to the other team, play on</li>
+        <li>Same teams the whole block</li></ul>
+      <h2>Think about</h2><ul><li>What did the help defender do?</li><li>Where was the open space?</li></ul>
+      <div class="test">Test (W4.2): hand this to an assistant or a player. Can they run the game with no explanation? Note every question they ask: ______________________________</div></div><div class="page"><h1>Remote button sheet — Closeout Attack 3v3</h1>
+      <p class=dim>W4.7 live dry-run. Tick marks instead of taps. Circle a mark to "undo". Basket: ____ · Block: ____ · Scorer: ________</p>
+      <table class="remote"><tr><th>RED</th><th>ticks</th><th>BLUE</th><th>ticks</th></tr><tr><td class=lbl>Basket <b>+1</b></td><td class=box></td><td class=lbl>Basket <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Three <b>+1</b></td><td class=box></td><td class=lbl>Three <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Kick-out 3 <b>+3</b></td><td class=box></td><td class=lbl>Kick-out 3 <b>+3</b></td><td class=box></td></tr><tr><td class=lbl>Corner catch <b>+1</b></td><td class=box></td><td class=lbl>Corner catch <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Off reb <b>+1</b></td><td class=box></td><td class=lbl>Off reb <b>+1</b></td><td class=box></td></tr></table>
+      <h2>Calls (no points)</h2><table class="remote"><tr><td class=lbl>Too many dribbles</td><td class=box colspan=3></td></tr><tr><td class=lbl>Stop ⇄ (possession)</td><td class=box colspan=3></td></tr></table>
+      <h2>Clock and schedule</h2><table class="remote sched"><tr><th>Planned</th><th>Start</th><th>Warn 1:00</th><th>0:00</th><th>Decision at 0:00 (next / +1 from __ / finish poss / keep going)</th><th>End</th></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr></table>
+      <h2>Notes</h2><p class=dim>Buttons you wished you had · buttons you never used · moments you couldn't tell which team: </p><div class=lines></div></div><div class="page"><h1>Remote button sheet — 3v3 Quick Score</h1>
+      <p class=dim>W4.7 live dry-run. Tick marks instead of taps. Circle a mark to "undo". Basket: ____ · Block: ____ · Scorer: ________</p>
+      <table class="remote"><tr><th>RED</th><th>ticks</th><th>BLUE</th><th>ticks</th></tr><tr><td class=lbl>Basket <b>+1</b></td><td class=box></td><td class=lbl>Basket <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Three <b>+1</b></td><td class=box></td><td class=lbl>Three <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Quick score <b>+2</b></td><td class=box></td><td class=lbl>Quick score <b>+2</b></td><td class=box></td></tr></table>
+      <h2>Calls (no points)</h2><table class="remote"><tr><td class=lbl>Stop ⇄ (possession)</td><td class=box colspan=3></td></tr></table>
+      <h2>Clock and schedule</h2><table class="remote sched"><tr><th>Planned</th><th>Start</th><th>Warn 1:00</th><th>0:00</th><th>Decision at 0:00 (next / +1 from __ / finish poss / keep going)</th><th>End</th></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr></table>
+      <h2>Notes</h2><p class=dim>Buttons you wished you had · buttons you never used · moments you couldn't tell which team: </p><div class=lines></div></div><div class="page"><h1>Remote button sheet — 4v4 Defense Scores</h1>
+      <p class=dim>W4.7 live dry-run. Tick marks instead of taps. Circle a mark to "undo". Basket: ____ · Block: ____ · Scorer: ________</p>
+      <table class="remote"><tr><th>RED</th><th>ticks</th><th>BLUE</th><th>ticks</th></tr><tr><td class=lbl>Basket <b>+1</b></td><td class=box></td><td class=lbl>Basket <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Three <b>+1</b></td><td class=box></td><td class=lbl>Three <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Stop <b>+1</b></td><td class=box></td><td class=lbl>Stop <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Deflection <b>+1</b></td><td class=box></td><td class=lbl>Deflection <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Charge <b>+2</b></td><td class=box></td><td class=lbl>Charge <b>+2</b></td><td class=box></td></tr></table>
+      <h2>Calls (no points)</h2><table class="remote"><tr><td class=lbl>Stop ⇄ (possession)</td><td class=box colspan=3></td></tr></table>
+      <h2>Clock and schedule</h2><table class="remote sched"><tr><th>Planned</th><th>Start</th><th>Warn 1:00</th><th>0:00</th><th>Decision at 0:00 (next / +1 from __ / finish poss / keep going)</th><th>End</th></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr></table>
+      <h2>Notes</h2><p class=dim>Buttons you wished you had · buttons you never used · moments you couldn't tell which team: </p><div class=lines></div></div><div class="page"><h1>Remote button sheet — 3v3 — Help Lives in the Paint</h1>
+      <p class=dim>W4.7 live dry-run. Tick marks instead of taps. Circle a mark to "undo". Basket: ____ · Block: ____ · Scorer: ________</p>
+      <table class="remote"><tr><th>RED</th><th>ticks</th><th>BLUE</th><th>ticks</th></tr><tr><td class=lbl>Basket <b>+1</b></td><td class=box></td><td class=lbl>Basket <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Three <b>+1</b></td><td class=box></td><td class=lbl>Three <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Help left paint <b>+1</b></td><td class=box></td><td class=lbl>Help left paint <b>+1</b></td><td class=box></td></tr></table>
+      <h2>Calls (no points)</h2><table class="remote"><tr><td class=lbl>Stop ⇄ (possession)</td><td class=box colspan=3></td></tr></table>
+      <h2>Clock and schedule</h2><table class="remote sched"><tr><th>Planned</th><th>Start</th><th>Warn 1:00</th><th>0:00</th><th>Decision at 0:00 (next / +1 from __ / finish poss / keep going)</th><th>End</th></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr></table>
+      <h2>Notes</h2><p class=dim>Buttons you wished you had · buttons you never used · moments you couldn't tell which team: </p><div class=lines></div></div><div class="page"><h1>Remote button sheet — 2v2 Elbow Screen — Coach Calls the Coverage</h1>
+      <p class=dim>W4.7 live dry-run. Tick marks instead of taps. Circle a mark to "undo". Basket: ____ · Block: ____ · Scorer: ________</p>
+      <table class="remote"><tr><th>RED</th><th>ticks</th><th>BLUE</th><th>ticks</th></tr><tr><td class=lbl>Basket <b>+1</b></td><td class=box></td><td class=lbl>Basket <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Three <b>+1</b></td><td class=box></td><td class=lbl>Three <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Right counter <b>+2</b></td><td class=box></td><td class=lbl>Right counter <b>+2</b></td><td class=box></td></tr></table>
+      <h2>Calls (no points)</h2><table class="remote"><tr><td class=lbl>Stop ⇄ (possession)</td><td class=box colspan=3></td></tr></table>
+      <h2>Clock and schedule</h2><table class="remote sched"><tr><th>Planned</th><th>Start</th><th>Warn 1:00</th><th>0:00</th><th>Decision at 0:00 (next / +1 from __ / finish poss / keep going)</th><th>End</th></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr></table>
+      <h2>Notes</h2><p class=dim>Buttons you wished you had · buttons you never used · moments you couldn't tell which team: </p><div class=lines></div></div><div class="page"><h1>Remote button sheet — 3v3 + Joker</h1>
+      <p class=dim>W4.7 live dry-run. Tick marks instead of taps. Circle a mark to "undo". Basket: ____ · Block: ____ · Scorer: ________</p>
+      <table class="remote"><tr><th>RED</th><th>ticks</th><th>BLUE</th><th>ticks</th></tr><tr><td class=lbl>Basket <b>+1</b></td><td class=box></td><td class=lbl>Basket <b>+1</b></td><td class=box></td></tr><tr><td class=lbl>Three <b>+1</b></td><td class=box></td><td class=lbl>Three <b>+1</b></td><td class=box></td></tr></table>
+      <h2>Calls (no points)</h2><table class="remote"><tr><td class=lbl>Stop ⇄ (possession)</td><td class=box colspan=3></td></tr></table>
+      <h2>Clock and schedule</h2><table class="remote sched"><tr><th>Planned</th><th>Start</th><th>Warn 1:00</th><th>0:00</th><th>Decision at 0:00 (next / +1 from __ / finish poss / keep going)</th><th>End</th></tr>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr></table>
+      <h2>Notes</h2><p class=dim>Buttons you wished you had · buttons you never used · moments you couldn't tell which team: </p><div class=lines></div></div><div class="page"><h1>Tally sheet (W4.3)</h1>
+      <p class=dim>One block. Track 1–2 pinpoints live while someone else keeps score. Each box = one opportunity: ✔ correct, ✘ incorrect. Note the clock when you start and stop.</p>
+      <table class="tally"><tr><th>#</th><th>Pinpoint 1: ____________ ✔/✘ (one box per opportunity)</th><th>count ✔</th><th>count opp</th><th>Pinpoint 2: ____________</th><th>count ✔</th><th>count opp</th></tr><tr><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>6</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>7</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>8</td><td></td><td></td><td></td><td></td><td></td><td></td></tr></table>
+      <p>Start ______  Stop ______  Active minutes ______ · Rate ✔/min ______ · Accuracy ______ · 7/8 met? ______</p>
+      <h2>Dial turn (W4.4)</h2><table class="tally"><tr><th>Time</th><th>Dial</th><th>From → to</th><th>Why (success rate)</th><th>What changed in the next 2 minutes</th></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr></table>
+      <h2>Capture (W4.5)</h2><p class=dim>When players invent something good, sketch it in 30 s:</p>
+      <div class="sketches"><div class=sk><svg viewBox="0 0 300 252" width="100%"><rect x="0" y="0" width="300" height="252" class="floor"/>
+      <rect x="114" y="0" width="72" height="114" class="line"/>
+      <circle cx="150" cy="114.0" r="36" class="line"/>
+      <path d="M 31.5 0 L 31.5 31.5 A 118.5 118.5 0 0 0 268.5 31.5 L 268.5 0" class="line"/>
+      <circle cx="150" cy="31.5" r="4.5" class="rim"/><line x1="132" y1="24.0" x2="168" y2="24.0" class="board"/></svg><div class=dim>time ____ note __________</div></div><div class=sk><svg viewBox="0 0 300 252" width="100%"><rect x="0" y="0" width="300" height="252" class="floor"/>
+      <rect x="114" y="0" width="72" height="114" class="line"/>
+      <circle cx="150" cy="114.0" r="36" class="line"/>
+      <path d="M 31.5 0 L 31.5 31.5 A 118.5 118.5 0 0 0 268.5 31.5 L 268.5 0" class="line"/>
+      <circle cx="150" cy="31.5" r="4.5" class="rim"/><line x1="132" y1="24.0" x2="168" y2="24.0" class="board"/></svg><div class=dim>time ____ note __________</div></div></div></div></body></html>

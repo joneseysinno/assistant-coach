@@ -1,0 +1,33 @@
+id: s07-neutral-joker
+name: 3v3 + Joker
+stage: team-based
+stress: { tests: "Neutral role + role-level limit", result: clean-with-decision, decisions: [D-032, D-025] }
+format:
+  numbers: 3v3+1
+  space: { court: half }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: O3, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+    - { id: D3, team: defense }
+    - { id: J,  team: neutral, plays_for: offense }
+  start: { type: check-ball, spot: top }
+  restart: { on_score: switch, on_stop: switch }
+  rotation: { type: none }
+  end: { type: score, target: 7 }
+base_rules: { two: 1, three: 1 }
+constraints:
+  - id: joker-limits
+    name: Joker can't shoot
+    category: task
+    invites: [use-the-overload, extra-pass]
+    preserves: [live-defense]
+    targets: [off.extend.extra-pass, char.humble]
+    roles:
+      - { restrict: J, cannot: shoot }
+reads: [read.help.steps-up]
+expect:
+  card: ["Basket = 1", "Three = 1", "The joker plays for the offense", "The joker can't shoot"]
+  calls: [Joker shot]

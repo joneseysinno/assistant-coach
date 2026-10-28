@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="theme-color" content="#111318">
+<title>Remote — tracer</title>
+<style>
+  :root { --red:#e5484d; --blue:#3e63dd; --bg:#111318; --fg:#eceef2; --muted:#8b8d98; --btn:#2b2e36; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px system-ui,sans-serif;
+         touch-action:manipulation; user-select:none; -webkit-user-select:none; }
+  header { display:flex; gap:8px; align-items:center; padding:10px 14px; font-size:14px; color:var(--muted); }
+  .dot { width:12px; height:12px; border-radius:50%; background:#f5a524; flex:none; }
+  .dot.ok { background:#30a46c; } .dot.bad { background:var(--red); }
+  #pending { margin-left:auto; }
+  #pending.warn { color:#f5a524; font-weight:700; }
+  .score { display:grid; grid-template-columns:1fr 1fr; text-align:center; font-weight:800; font-size:56px;
+           font-variant-numeric:tabular-nums; line-height:1.1; }
+  .clock { text-align:center; font:700 28px ui-monospace,Consolas,monospace; color:var(--muted); }
+  .teams { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:10px; }
+  .team { display:flex; flex-direction:column; gap:10px; }
+  button { border:0; border-radius:14px; font:800 34px system-ui,sans-serif; color:#fff; padding:22px 0;
+           background:var(--btn); }
+  .r .pts { background:var(--red); } .b .pts { background:var(--blue); }
+  button:active { transform:scale(.97); filter:brightness(1.25); }
+  .row { display:flex; gap:10px; padding:0 10px 10px; }
+  .row button { flex:1; font-size:18px; padding:16px 0; }
+  .stats { padding:6px 14px 20px; font:13px ui-monospace,Consolas,monospace; color:var(--muted); white-space:pre-line; }
+</style>
+</head>
+<body>
+<header><span class="dot" id="dot"></span><span id="conn">connecting…</span><span id="pending">0 pending</span></header>
+<div class="score"><div style="color:var(--red)" id="s0">–</div><div style="color:var(--blue)" id="s1">–</div></div>
+<div class="clock" id="clock">--:--</div>
+<div class="teams">
+  <div class="team r">
+    <button class="pts" data-team="0" data-pts="1">+1</button>
+    <button class="pts" data-team="0" data-pts="2">+2</button>
+    <button class="pts" data-team="0" data-pts="3">+3</button>
+  </div>
+  <div class="team b">
+    <button class="pts" data-team="1" data-pts="1">+1</button>
+    <button class="pts" data-team="1" data-pts="2">+2</button>
+    <button class="pts" data-team="1" data-pts="3">+3</button>
+  </div>
+</div>
+<div class="row"><button id="undo">↶ Undo my last tap</button></div>
+<div class="row">
+  <button data-clock="start">▶ Start</button><button data-clock="pause">❚❚ Pause</button><button data-clock="reset">⟲ Reset</button>
+</div>
+<div class="row">
+  <button data-set="60">1:00</button><button data-set="300">5:00</button><button data-set="480">8:00</button><button data-set="720">12:00</button>
+</div>
+<div class="stats" id="stats"></div>
+
+<script>
+// T00 tracer Remote — throwaway. Transport behaviour only:
+// every tap gets an id, sits in a local queue until the hub acks it, and is re-sent after
+// any reconnect. The hub ignores ids it has seen, so a re-send can never double-count.
+const S = sessionStorage;
+const device = S.dev || (S.dev = 'r' + Math.random().toString(36).slice(2, 8));
+let counter = +(S.ctr || 0);
+let queue = JSON.parse(S.q || '[]');          // unacked messages, survives a page reload
+let ws = null, connected = false, epoch = 0;
+let reconnects = 0, lastHeard = 0, state = null, offset = 0;
+let sent = 0, acked = 0, dups = 0;
+const rtts = [];
+
+const $ = id => document.getElementById(id);
+const save = () => { S.q = JSON.stringify(queue); S.ctr = counter; };
+const nextId = () => { counter += 1; save(); return device + '-' + counter; };
+
+function enqueue(msg) { msg._epoch = -1; queue.push(msg); save(); flush(); render(); }
+
+function flush() {
+  if (!connected) return;
+  for (const m of queue) {
+    if (m._epoch === epoch) continue;          // already sent on this connection
+    m._epoch = epoch;
+    const { _epoch, ...wire } = m;
+    ws.send(JSON.stringify(wire));
+    sent += 1;
+  }
+  save();
+}
+
+function connect() {
+  ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen = () => {
+    connected = true; epoch += 1; lastHeard = Date.now();
+    ws.send(JSON.stringify({ t: 'hello', role: 'remote', device }));
+    flush(); render();
+  };
+  ws.onmessage = e => {
+    lastHeard = Date.now();
+    const m = JSON.parse(e.data);
+    if (m.t === 'ack') {
+      const before = queue.length;
+      queue = queue.filter(q => q.id !== m.id);
+      if (queue.length < before) acked += 1;
+      if (m.dup) dups += 1;
+      save();
+    } else if (m.t === 'state') {
+      state = m;
+    } else if (m.t === 'pong') {
+      const now = Date.now(), rtt = now - m.c;
+      rtts.push(rtt); if (rtts.length > 300) rtts.shift();
+      offset = m.s - (m.c + rtt / 2);
+    }
+    render();
+  };
+  ws.onclose = () => drop(800);
+  ws.onerror = () => drop(800);
+}
+
+// Abandon the socket at once (don't wait for a close handshake that can't finish while
+// the Wi-Fi is down) and open a fresh one. Unacked taps stay queued and are re-sent.
+function drop(delay) {
+  const old = ws; ws = null;
+  if (!old) return;
+  old.onopen = old.onmessage = old.onclose = old.onerror = null;
+  try { old.close(); } catch (_) {}
+  if (connected) reconnects += 1;
+  connected = false; render();
+  setTimeout(connect, delay);
+}
+
+// Heartbeat. A Wi-Fi drop often leaves the socket "open" with nothing arriving;
+// if the hub has been silent for 4 s, drop it and reconnect.
+setInterval(() => {
+  if (!connected) return;
+  if (Date.now() - lastHeard > 4000) { drop(0); return; }
+  ws.send(JSON.stringify({ t: 'ping', c: Date.now() }));
+}, 1000);
+
+function pct(arr, p) {
+  if (!arr.length) return '–';
+  const s = [...arr].sort((a, b) => a - b);
+  return Math.round(s[Math.min(s.length - 1, Math.floor(p * s.length))]);
+}
+
+function fmt(ms) {
+  const neg = ms < 0, t = Math.ceil(Math.abs(ms) / 1000);
+  return (neg ? '+' : '') + Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+}
+
+function render() {
+  $('dot').className = 'dot ' + (connected ? 'ok' : 'bad');
+  $('conn').textContent = connected ? `connected · ${state ? state.clients : '?'} devices` : 'reconnecting…';
+  $('pending').textContent = `${queue.length} pending`;
+  $('pending').className = queue.length ? 'warn' : '';
+  if (state) { $('s0').textContent = state.score[0]; $('s1').textContent = state.score[1]; }
+  $('stats').textContent =
+    `rtt ms  p50 ${pct(rtts, .5)}  p95 ${pct(rtts, .95)}  max ${rtts.length ? Math.max(...rtts) : '–'}  (n=${rtts.length})\n` +
+    `sent ${sent}  acked ${acked}  dup-acks ${dups}  reconnects ${reconnects}\n` +
+    `device ${device}`;
+}
+
+function tickClock() {
+  if (state) {
+    const c = state.clock;
+    const rem = c.running ? c.remaining_ms - (Date.now() + offset - state.server_ms) : c.remaining_ms;
+    $('clock').textContent = fmt(rem) + (c.running ? '' : '  ❚❚');
+  }
+  requestAnimationFrame(tickClock);
+}
+
+document.querySelectorAll('button.pts').forEach(b => b.addEventListener('click', () => {
+  enqueue({ t: 'tap', id: nextId(), device, team: +b.dataset.team, pts: +b.dataset.pts });
+  if (navigator.vibrate) navigator.vibrate(25);
+}));
+$('undo').addEventListener('click', () => {
+  enqueue({ t: 'undo', id: nextId(), device });
+  if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
+});
+document.querySelectorAll('[data-clock]').forEach(b => b.addEventListener('click', () =>
+  enqueue({ t: 'clock', id: nextId(), cmd: b.dataset.clock })));
+document.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () =>
+  enqueue({ t: 'clock', id: nextId(), cmd: 'set', secs: +b.dataset.set })));
+
+render(); connect(); tickClock();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    # Windows: the target platform, and Dioxus desktop needs no extra system libs there.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - uses: Swatinem/rust-cache@v2
+      - name: CI script
+        shell: pwsh
+        run: ./scripts/ci.ps1

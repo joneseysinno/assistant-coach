@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tracer hub</title>
+<style>
+  body { margin:0; background:#111318; color:#eceef2; font-family:system-ui,sans-serif; }
+  .wrap { max-width:900px; margin:0 auto; padding:24px 16px; }
+  h1 { margin:0 0 4px; } .muted { color:#8b8d98; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:16px; }
+  .card { background:#1b1d23; border-radius:12px; padding:14px; }
+  .card img { background:#fff; border-radius:8px; width:100%; max-width:240px; display:block; }
+  a { color:#8fb0ff; word-break:break-all; font-family:ui-monospace,Consolas,monospace; }
+  #status { font-family:ui-monospace,Consolas,monospace; margin-top:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Tracer hub (T00)</h1>
+  <p class="muted">Throwaway spike. Scan a code with the phone on the router's Wi-Fi.</p>
+  <div id="status">loading…</div>
+  <div class="grid" id="cards"></div>
+</div>
+<script>
+async function load() {
+  const info = await (await fetch('/info')).json();
+  document.getElementById('status').textContent =
+    `${info.clients} connected · score ${info.score[0]}–${info.score[1]} · wasm page ${info.wasm_built ? 'built' : 'NOT built (run build.ps1)'}`;
+  const cards = document.getElementById('cards');
+  if (!cards.dataset.done) {
+    const base = info.urls[0] || location.origin;
+    for (const [label, path] of [['Remote (phone)', '/remote'], ['Board (TV)', '/board'], ['wasm proof', '/wasm']]) {
+      const url = base + path;
+      cards.insertAdjacentHTML('beforeend',
+        `<div class="card"><h3>${label}</h3><img alt="QR for ${url}" src="/qr.svg?text=${encodeURIComponent(url)}"><p><a href="${path}">${url}</a></p></div>`);
+    }
+    if (info.urls.length > 1) {
+      cards.insertAdjacentHTML('beforeend', `<div class="card"><h3>Other addresses</h3>${info.urls.slice(1).map(u => `<p>${u}</p>`).join('')}</div>`);
+    }
+    cards.dataset.done = '1';
+  }
+}
+load(); setInterval(load, 2000);
+</script>
+</body>
+</html>

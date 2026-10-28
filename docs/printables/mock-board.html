@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock Board — TV test</title>
+<style>
+  :root { --bg:#0b0d10; --fg:#f4f1ea; --dim:#9aa0a6; --red:#e53935; --blue:#1e88e5; --amber:#ffb300; --ot:#ff3d3d; --rest:#4fc3f7; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; background:var(--bg); color:var(--fg); font-family: "Segoe UI", Roboto, Arial, sans-serif; font-weight:700; overflow:hidden; }
+  .num { font-variant-numeric: tabular-nums; }
+  .frame { position:absolute; inset:0; border:1.2vh solid transparent; display:grid; grid-template-rows: 9vh 1fr 8vh 7vh; padding:2vh 3vw; }
+  .frame.amber { border-color:var(--amber); }
+  .frame.ot { border-color:var(--ot); border-width:2.2vh; }
+  .frame.rest { border-color:var(--rest); }
+  .top { display:flex; justify-content:space-between; align-items:center; font-size:7vh; letter-spacing:.02em; }
+  .top .blk { font-size:4.5vh; color:var(--dim); white-space:nowrap; }
+  .top > span:first-child { white-space:nowrap; }
+  .mid { display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; text-align:center; }
+  .team { display:flex; flex-direction:column; align-items:center; }
+  .team .name { font-size:6vh; padding:0 2vw; border-radius:1vh; }
+  .team .score { font-size:30vh; line-height:1; }
+  .clock { font-size:22vh; line-height:1; }
+  .shot { font-size:14vh; color:var(--amber); line-height:1; }
+  .clock.amber { color:var(--amber); } .clock.ot { color:var(--ot); }
+  .rules { font-size:6vh; text-align:center; align-self:center; }
+  .next { font-size:4.5vh; color:var(--dim); align-self:center; }
+  .status { position:absolute; right:3vw; bottom:2vh; font-size:3.5vh; color:var(--ot); }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:2vw; height:100%; }
+  .half { border:.4vh solid #2a2f36; border-radius:2vh; display:flex; flex-direction:column; align-items:center; justify-content:space-around; padding:2vh 0; }
+  .half .lbl { font-size:5vh; color:var(--dim); }
+  .half .scores { display:flex; gap:4vw; font-size:20vh; line-height:1; }
+  .half .gname { font-size:5vh; }
+  /* readability ladder */
+  .ladder { padding:3vh 4vw; display:flex; flex-direction:column; gap:1.5vh; }
+  .ladder div { white-space:nowrap; }
+  .help { position:fixed; left:1vw; bottom:1vh; font-size:1.6vh; color:#555; font-weight:400; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="help" id="help">Keys: 1 running · 2 last minute · 3 overtime · 4 two baskets · 5 rest · 6 between blocks · 7 readability ladder · Space start/pause clock · F full screen · H hide this</div>
+<script>
+// Static mock of the S12 Board, for the P0 gym test (W4.6). No network, no app code.
+const S = { mode: 1, run: true, t: 252, shot: 12, ot: 0 };
+const app = document.getElementById('app');
+const fmt = s => { const neg = s < 0; s = Math.abs(Math.round(s)); return (neg ? '+' : '') + Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); };
+const team = (n,c,sc) => `<div class="team"><div class="name" style="background:${c}">${n}</div><div class="score num">${sc}</div></div>`;
+function running(cls, clockText, clockCls, status) {
+  return `<div class="frame ${cls}">
+    <div class="top"><span>CLOSEOUT ATTACK 3v3</span><span class="blk" style="${status ? 'color:var(--ot)' : ''}">${status || 'BLOCK 4 of 9'}</span></div>
+    <div class="mid">${team('RED','var(--red)',5)}
+      <div><div class="clock num ${clockCls}">${clockText}</div><div class="shot num">${S.shot}</div></div>
+      ${team('BLUE','var(--blue)',3)}</div>
+    <div class="rules">Kick-out 3 = 3 · 2 dribbles max · Corner catch = 1</div>
+    <div class="next">NEXT ▸ Transition 3v2 → 2v1 (8 min) · Where is the help coming from?</div>
+  </div>`;
+}
+function render() {
+  const m = S.mode;
+  if (m === 1) app.innerHTML = running('', fmt(S.t), '');
+  if (m === 2) app.innerHTML = running('amber', fmt(Math.min(S.t, 59)), 'amber');
+  if (m === 3) app.innerHTML = running('ot', fmt(-S.ot), 'ot', 'OVERTIME · +3 min behind');
+  if (m === 4) app.innerHTML = `<div class="frame"><div class="top"><span>CROSS-COURT 2v2</span><span class="clock num" style="font-size:9vh">${fmt(S.t)}</span><span class="blk">BLOCK 2 of 9</span></div>
+     <div class="two">${['SIDE 1','SIDE 2'].map((b,i)=>`<div class="half"><div class="lbl">${b}</div><div class="gname">Game to 5</div>
+       <div class="scores num"><span style="color:var(--red)">${i?2:4}</span><span style="color:var(--blue)">${i?3:1}</span></div></div>`).join('')}</div>
+     <div class="rules">Three = 2 · Make one pass before you shoot</div><div class="next">NEXT ▸ Closeout Attack 3v3</div></div>`;
+  if (m === 5) app.innerHTML = `<div class="frame rest"><div class="top"><span>REST</span><span class="blk">Interval 2 of 3 next</span></div>
+     <div class="mid" style="grid-template-columns:1fr"><div class="clock num" style="color:var(--rest)">${fmt(Math.min(S.t,60))}</div></div>
+     <div class="rules">Get water · same teams</div><div class="next"></div></div>`;
+  if (m === 6) app.innerHTML = `<div class="frame"><div class="top"><span>NEXT: TRANSITION 3v2 → 2v1</span><span class="blk">Starts in 0:45</span></div>
+     <div class="rules" style="font-size:6vh;line-height:1.5;text-align:left;padding-left:4vw">Basket = 1<br>Three = 1<br>Layup in the paint = +1<br>Lines of three — shooter stays back on defense</div>
+     <div class="next">Scorers: scan the QR · PIN 4821</div><div></div></div>`;
+  if (m === 7) app.innerHTML = `<div class="ladder">${[30,22,14,10,7,6,4.5,3].map(v=>`<div style="font-size:${v}vh">${v} vh · ${v >= 14 ? '4:12 · 7' : 'Kick-out 3 = 3 · 2 dribbles max'}</div>`).join('')}</div>`;
+}
+setInterval(() => { if (!S.run) return; S.t = S.t > 0 ? S.t - 1 : S.t; S.ot++; S.shot = S.shot > 0 ? S.shot - 1 : 12; render(); }, 1000);
+addEventListener('keydown', e => {
+  if (e.key >= '1' && e.key <= '7') { S.mode = +e.key; if (S.mode===1) S.t = 252; if (S.mode===3) S.ot = 83; }
+  if (e.key === ' ') S.run = !S.run;
+  if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen?.();
+  if (e.key === 'h' || e.key === 'H') { const h = document.getElementById('help'); h.style.display = h.style.display === 'none' ? '' : 'none'; }
+  render();
+});
+render();
+</script>
+</body>
+</html>

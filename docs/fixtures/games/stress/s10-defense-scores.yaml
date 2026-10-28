@@ -1,0 +1,35 @@
+id: s10-defense-scores
+name: 4v4 Defense Scores
+stage: team-based
+stress: { tests: "Defense-side scoring, character rules", result: clean, decisions: [] }
+format:
+  numbers: 4v4
+  space: { court: half }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: O3, team: offense }
+    - { id: O4, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+    - { id: D3, team: defense }
+    - { id: D4, team: defense }
+  start: { type: coach-pass, from: top, to: O1 }
+  restart: { on_score: keep, on_stop: switch }
+  rotation: { type: none }
+  end: { type: score, target: 10 }
+base_rules: { two: 1, three: 1 }
+constraints:
+  - id: defense-scores
+    name: Defense scores
+    category: character
+    invites: [help, closeouts, take-charges]
+    preserves: [live-offense, help-defense]
+    targets: [char.effort, def.scramble.help]
+    rules:
+      - { id: stop, label: Stop, when: { event: stop }, then: [ { points: 1, to: defense }, { possession: switch } ], judge: coach }
+      - { id: deflection, label: Deflection, when: { event: deflection }, then: [ { points: 1, to: defense } ], judge: coach }
+      - { id: charge, label: Charge, when: { event: charge }, then: [ { points: 2, to: defense }, { turnover: true } ], judge: coach }
+expect:
+  card: ["Basket = 1", "Three = 1", "Make it, take it", "Stop = +1 for the defense", "Deflection = +1 for the defense", "Charge = +2 for the defense"]
+  fold_test: S2-F4

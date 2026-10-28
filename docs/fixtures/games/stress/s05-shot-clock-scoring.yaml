@@ -1,0 +1,53 @@
+id: s05-shot-clock-scoring
+name: 3v3 Quick Score
+stage: team-based
+stress: { tests: "Time-based conditions", result: clean, decisions: [D-021, D-033] }
+format:
+  numbers: 3v3
+  space: { court: half }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: O3, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+    - { id: D3, team: defense }
+  start: { type: coach-pass, from: top, to: O1 }
+  restart: { on_score: switch, on_stop: switch }
+  rotation: { type: none }
+  end: { type: block }
+  shot_clock: { seconds: "$shot", resets_on: [possession.change] }
+base_rules: { two: 1, three: 1 }
+dials:
+  shot:   { duration: [6, 24], default: 12, harder: down, levels: [16, 12, 8], label: "Shot clock" }
+  window: { duration: [3, 10], default: 6, harder: down, levels: [8, 6, 4], label: "Quick window" }
+constraints:
+  - id: quick-score
+    name: Catch-and-go bonus
+    category: task
+    invites: [catch-and-attack, quick-decisions]
+    preserves: [closeouts, help-defense]
+    targets: [off.extend.attack-closeout]
+    rules:
+      - id: quick
+        label: Quick score
+        when: { event: make }
+        after: [ { event: catch } ]
+        within: "$window"
+        then: [ { points: 2 } ]
+        overrides: [base.two]
+        judge: coach
+  - id: shot-clock
+    name: Shot clock
+    category: task
+    invites: [urgency]
+    preserves: [full-defense]
+    targets: [off.finish.shot-selection]
+    rules:
+      - id: shot-expired
+        when: { clock: shot, reaches: 0 }
+        then: [ { turnover: true } ]
+        judge: auto
+expect:
+  card: ["Basket = 1", "Three = 1", "Score within 6 seconds of the catch = 2", "Shot clock: 12 seconds"]
+  board_clocks: [block, shot]

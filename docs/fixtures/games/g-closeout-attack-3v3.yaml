@@ -1,0 +1,94 @@
+# Worked example A from 02 §7, in the S5 fixture format.
+id: g-closeout-attack-3v3
+name: Closeout Attack 3v3
+stage: team-based
+format:
+  numbers: 3v3
+  space: { court: half }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: O3, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+    - { id: D3, team: defense }
+  teams: 2
+  start: { type: closeout, passer: defense, closeout: live, distance: "$closeout_dist" }
+  restart: { on_score: switch, on_stop: switch, on_violation: switch }
+  rotation: { type: none }
+  end: { type: score, target: "$target", win_by: 1 }
+base_rules: { two: 1, three: 1 }
+dials:
+  target:         { int: [3, 11], default: 7, label: "Game to" }
+  closeout_dist:  { distance: [0, 15], default: 6, stops: { rim: 0, block: 6, elbow: 14 }, harder: up, levels: [0, 6, 14], label: "Closeout starts at" }
+constraints:
+  - id: kick-out-bonus
+    name: Kick-out bonus
+    category: task
+    invites: [drive-and-kick, extra-pass]
+    preserves: [help-defense, closeout]
+    targets: [off.extend.drive-and-kick]
+    rules:
+      - id: kick-out-three
+        label: Kick-out 3
+        when: { event: make, value: 3 }
+        after: [ { event: paint-touch } ]
+        then: [ { points: 3 } ]
+        overrides: [base.three]
+        judge: coach
+  - id: dribble-limit
+    name: Dribble limit
+    category: task
+    invites: [quick-decisions, catch-and-attack]
+    preserves: [defender-pressure, help-defense]
+    targets: [off.extend.attack-closeout]
+    dials:
+      limit: { int: [1, 4], default: 2, harder: down, levels: [3, 2, 1] }
+    rules:
+      - id: over-limit
+        label: Too many dribbles
+        when: { count: dribble, by: player, op: ">", value: "$limit" }
+        then: [ { turnover: true } ]
+        judge: coach
+  - id: corner-zones
+    name: Corner zones
+    category: environment
+    invites: [relocation, spacing]
+    preserves: [help-defense]
+    targets: [off.shape.relocation]
+    zones:
+      - { id: corner-L, kind: bonus, shape: { named: corner-L } }
+      - { id: corner-R, kind: bonus, shape: { named: corner-R } }
+    rules:
+      - id: corner-catch
+        label: Corner catch
+        when: { event: catch, zone: [corner-L, corner-R] }
+        after: [ { event: drive } ]
+        then: [ { points: 1 } ]
+        judge: coach
+  - id: hungry
+    name: Hungry
+    category: character
+    invites: [crash-the-glass]
+    preserves: [box-out-contest]
+    targets: [char.hungry, off.finish.off-reb]
+    rules:
+      - id: off-reb
+        label: Off reb
+        when: { event: off-reb }
+        then: [ { points: 1 } ]
+        judge: coach
+reads: [read.closeout.high-fast, read.closeout.short, read.help.steps-up]
+observables:
+  - { pinpoint: closeout-correct, over: closeout }
+expect:   # golden output for P1 tests (renderer + resolver)
+  card:
+    - "Basket = 1"
+    - "Three = 1"
+    - "Three after a paint touch = 3"
+    - "More than 2 dribbles = turnover"
+    - "Catch in a corner zone after a drive = 1"
+    - "Offensive rebound = 1"
+  board: "Kick-out 3 = 3 · 2 dribbles max · Corner catch = 1"
+  buttons_per_team: [Basket, Three, Kick-out 3, Corner catch, Off reb]
+  calls: [Too many dribbles]

@@ -1,0 +1,43 @@
+# Assistant Coach — one Cargo workspace (D-023).
+#
+#   ac-domain            pure types, rules, resolver, renderer, Store trait. No Dioxus, no IO.
+#   ac-sport-basketball  court presets, named regions, event vocabulary, targets (data only).
+#   ac-store-idb         Store impl on infinite-db (the ONLY crate that may depend on it, D-017).
+#   ac-live              hub logic: log, fold, clocks, schedule guard, buttons. Pure, no tokio.
+#   ac-app               Dioxus desktop: Studio (JoInn shell) + embedded hub server.
+#   ac-web               Dioxus web (wasm): Board + Remote, served by ac-app. Never opens the DB (D-019).
+#
+# Boundary rules are checked by `scripts/check_boundaries.py` (run by the CI script).
+
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+exclude = ["spikes"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.dependencies]
+# internal
+ac-domain = { path = "crates/ac-domain" }
+ac-sport-basketball = { path = "crates/ac-sport-basketball" }
+ac-store-idb = { path = "crates/ac-store-idb" }
+ac-live = { path = "crates/ac-live" }
+
+# UI. app-shell is pinned at a tag (D-023); bump the tag, then `cargo update -p app-shell`.
+dioxus = { version = "0.7", default-features = false }
+app-shell = { git = "https://github.com/joneseysinno/JoInn-Template", tag = "v0.1.0" }
+
+# Storage. crates.io has no 0.4.1 (latest published is 0.4.0), so P1 pins the git commit
+# that is 0.4.1 — GitHub main == AJ's local tree on 2026-10-28 (T11a, D-037).
+infinite-db = { git = "https://github.com/joneseysinno/infinitedb.git", rev = "d193986e96331f0cf9bfc1bc0d9cc15e72b8c8e4" }
+
+# dev
+tempfile = "3"

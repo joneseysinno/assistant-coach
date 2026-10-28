@@ -1,0 +1,38 @@
+id: s01-delayed-defender
+name: Delayed Defender 3v2 (+1)
+stage: complex
+stress: { tests: "Role entry triggered by an event", result: clean-with-decision, decisions: [D-025] }
+format:
+  numbers: 3v2+1
+  space: { court: half }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: O3, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+    - { id: D3, team: defense, start: { zone: baseline-out, active: false } }
+  start: { type: dribble-at, from: half-court-line }
+  restart: { on_score: rotate, on_stop: rotate }
+  rotation: { type: three-team, rotate_on: possession }
+  end: { type: block }
+base_rules: { two: 1, three: 1 }
+constraints:
+  - id: delayed-d3
+    name: Third defender joins late
+    category: task
+    invites: [attack-before-help-arrives, ball-movement]
+    preserves: [help-defense, time-pressure]
+    targets: [off.extend.drive-and-kick, def.scramble.rotate]
+    zones:
+      - { id: baseline-out, kind: start, shape: { rect: [-25, -8, 25, -5.25] } }
+    rules:
+      - id: d3-enters
+        when: { count: pass, by: team, op: "==", value: 1 }
+        then: [ { role: { enter: D3 } } ]
+        judge: players
+        say: "The third defender joins after the first pass"
+reads: [read.help.steps-up, read.help.stays]
+expect:
+  card: ["Basket = 1", "Three = 1", "The third defender joins after the first pass"]
+  buttons_per_team: [Basket, Three]

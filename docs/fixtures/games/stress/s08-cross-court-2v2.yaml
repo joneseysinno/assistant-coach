@@ -1,0 +1,32 @@
+id: s08-cross-court-2v2
+name: Cross-court 2v2s
+stage: team-based
+stress: { tests: "Multi-basket space layout", result: clean-with-decision, decisions: [D-020] }
+format:
+  numbers: 2v2
+  space: { court: cross-court, basket: side }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+  start: { type: check-ball, spot: top }
+  restart: { on_score: switch, on_stop: switch }
+  rotation: { type: winners-stay, rotate_on: game-end }
+  end: { type: score, target: 5 }
+base_rules: { two: 1, three: 2 }
+constraints:
+  - id: pass-before-shot
+    name: One pass before a shot
+    category: task
+    invites: [two-player-game, cut]
+    preserves: [on-ball-pressure, help]
+    targets: [off.create.cut]
+    rules:
+      - { id: no-pass, label: No pass first, when: { event: shot }, if: [ { count: pass, by: team, op: "<", value: 1 } ], then: [ { turnover: true } ], judge: players, say: "Make one pass before you shoot" }
+block_example:   # how a Block runs this on two side baskets at once
+  baskets: [S1, S2]
+  instances: 2
+expect:
+  board_layout: two-basket
+  card: ["Basket = 1", "Three = 2", "Make one pass before you shoot"]

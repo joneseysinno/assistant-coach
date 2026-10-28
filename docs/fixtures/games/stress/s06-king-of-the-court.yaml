@@ -1,0 +1,34 @@
+id: s06-king-of-the-court
+name: King of the Court 2v2 (4 teams)
+stage: team-based
+stress: { tests: "Rotation; ladder state across games", result: clean, decisions: [] }
+format:
+  numbers: 2v2
+  space: { court: half }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+  teams: 4
+  start: { type: check-ball, spot: top }
+  restart: { on_score: keep, on_stop: switch }
+  rotation: { type: king, rotate_on: game-end, loser_to: back }
+  end: { type: score, target: 3 }
+base_rules: { two: 1, three: 2 }
+constraints:
+  - id: kings-defend-first
+    name: Challengers get the ball
+    category: task
+    invites: [defensive-stops]
+    preserves: [full-game-structure]
+    targets: [def.deny.contain]
+    rules:
+      - id: challenger-ball
+        when: { game: end }
+        then: [ { restart: check-ball, ball: challenger } ]
+        judge: auto
+        say: "The new team starts with the ball"
+expect:
+  card: ["Basket = 1", "Three = 2", "Make it, take it", "The new team starts with the ball"]
+  ladder_test: "S4-T3"

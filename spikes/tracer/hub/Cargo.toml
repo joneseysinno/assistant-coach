@@ -1,0 +1,26 @@
+[package]
+name = "tracer-hub"
+description = "T00 spike: laptop hub (axum + WebSocket) serving the Board/Remote and the Dioxus wasm proof page."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[features]
+default = ["desktop"]
+# The hub window (URLs + QR). Proves axum on its own thread next to the Dioxus desktop event loop (T18's setup).
+desktop = ["dep:dioxus"]
+
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync"] }
+futures-util = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rust-embed = "8"
+mime_guess = "2"
+local-ip-address = "0.6"
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+dioxus = { version = "0.7", features = ["desktop"], optional = true }
+
+[dev-dependencies]
+tokio-tungstenite = "0.28"

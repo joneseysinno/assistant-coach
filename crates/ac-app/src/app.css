@@ -1,0 +1,19 @@
+/*
+ * App styles. The shell owns every class starting with `as-`; prefix
+ * your own classes with `app-` so they never collide.
+ *
+ * Theme tokens live on `.as-root`. Uncomment to override:
+ *
+ * .as-root[data-theme="dark"]  { --as-accent: #f59e0b; }
+ * .as-root[data-theme="light"] { --as-accent: #b45309; }
+ * .as-root { --as-rail-w: 44px; }
+ */
+
+.app-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.app-pad { padding: 12px; }
+.app-muted { color: var(--as-muted); }
+.app-viewport { padding: 24px; }
+.app-viewport h2 { margin: 0 0 4px; font-size: 20px; }
+.app-props { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; padding: 12px; }
+.app-props dt { color: var(--as-muted); }
+.app-props dd { margin: 0; font-family: var(--as-mono); }

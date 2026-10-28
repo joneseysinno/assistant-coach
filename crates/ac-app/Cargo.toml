@@ -1,0 +1,20 @@
+[package]
+name = "ac-app"
+description = "Assistant Coach desktop app: Studio (JoInn app-shell) and, from T18, the embedded live hub server."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["desktop"]
+desktop = ["dioxus/desktop"]
+web = ["dioxus/web"]
+
+[dependencies]
+app-shell.workspace = true
+dioxus = { workspace = true, features = ["lib", "launch", "logger"] }

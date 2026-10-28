@@ -1,0 +1,49 @@
+id: s02-continuous-advantage
+name: Continuous 3v2 → 2v1
+stage: team-based
+stress: { tests: "Chained possessions; roles switch teams", result: needed-extension, decisions: [D-026] }
+format:
+  numbers: 3v2 → 2v1
+  space: { court: full }
+  phases:
+    - id: three-on-two
+      attack: A
+      roles:
+        - { id: O1, team: offense }
+        - { id: O2, team: offense }
+        - { id: O3, team: offense }
+        - { id: D1, team: defense }
+        - { id: D2, team: defense }
+    - id: two-on-one
+      attack: B
+      roles:
+        - { id: O4, team: offense }
+        - { id: O5, team: offense }
+        - { id: D3, team: defense }
+  phase_flow:
+    - { from: three-on-two, on: possession.end, to: two-on-one, map: { D1: O4, D2: O5, shooter: D3 }, others: off }
+    - { from: two-on-one, on: possession.end, to: three-on-two, map: { "*": off }, next_group: true }
+  start: { type: dribble-at, from: half-court-line }
+  restart: { on_score: phase-next, on_stop: phase-next }
+  rotation: { type: continuous, rotate_on: possession }
+  end: { type: block }
+base_rules: { two: 1, three: 1 }
+constraints:
+  - id: score-fast
+    name: Early-advantage bonus
+    category: task
+    invites: [early-advantage, quick-decisions]
+    preserves: [retreating-defense, time-pressure]
+    targets: [trans.off.early-advantage]
+    rules:
+      - id: layup-bonus
+        label: Layup +1
+        when: { event: make, value: 2, zone: paint }
+        then: [ { points: 1 } ]
+        judge: coach
+reads: [read.2v1.commit, read.2v1.stays-home]
+notes: >
+  Teams in this game are "groups of three in line", not Red/Blue. Scoring is by group,
+  which the Board shows as a running total per group (open question in gap log G-02b).
+expect:
+  card: ["Basket = 1", "Three = 1", "Layup in the paint = +1"]

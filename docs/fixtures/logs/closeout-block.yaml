@@ -1,0 +1,29 @@
+# Replay fixture for S11-T5 / P1 ac-live fold tests.
+# Game: g-closeout-attack-3v3 (defaults: target 7, dribble limit 2). Basket A. Teams red, blue.
+session: se-test-01
+practice: pr-test-01
+block: b4
+game: g-closeout-attack-3v3
+entries:
+  - { seq: 1,  ms: 0,      kind: block.start }
+  - { seq: 2,  ms: 0,      kind: clock.start, clock: block }
+  - { seq: 3,  ms: 21000,  kind: rule.fired, rule: base.two,       team: red }    # red 1
+  - { seq: 4,  ms: 47000,  kind: rule.fired, rule: kick-out-three, team: blue }   # blue 3
+  - { seq: 5,  ms: 70000,  kind: rule.fired, rule: off-reb,        team: red }    # red 2
+  - { seq: 6,  ms: 71000,  kind: rule.fired, rule: base.two,       team: red }    # red 3
+  - { seq: 7,  ms: 95000,  kind: rule.fired, rule: over-limit,     team: blue }   # blue turnover, no points
+  - { seq: 8,  ms: 118000, kind: rule.fired, rule: kick-out-three, team: red }    # red 6
+  - { seq: 9,  ms: 119000, kind: rule.fired, rule: kick-out-three, team: red }    # mistaken double tap
+  - { seq: 10, ms: 121000, kind: undo, undoes: 9 }                                # red back to 6
+  - { seq: 11, ms: 140000, kind: rule.fired, rule: corner-catch,   team: blue }   # blue 4
+  - { seq: 12, ms: 141000, kind: rule.fired, rule: base.two,       team: blue }   # blue 5
+  - { seq: 13, ms: 160000, kind: clock.pause, clock: block }
+  - { seq: 14, ms: 190000, kind: clock.resume, clock: block }
+  - { seq: 15, ms: 205000, kind: rule.fired, rule: base.two,       team: red }    # red 7 → game end (auto)
+expect:
+  score: { red: 7, blue: 5 }
+  game_ended_at_seq: 15
+  block_clock_elapsed_ms_at_205000: 175000
+  possession_changes: 7      # seq 3, 4, 6, 7, 8, 12, 15 (makes switch, the turnover switches; off-reb and corner catch keep it)
+  possession_index_after: 8  # starts at 1
+  implied_events_seq_4: [paint-touch, make]

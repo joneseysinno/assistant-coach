@@ -1,0 +1,60 @@
+id: s04-losers-pick-rule
+name: 3v3 — Losing Team Picks the Next Rule
+stage: team-based
+stress: { tests: "Constraints change during the game; player choice", result: needed-extension, decisions: [D-028] }
+format:
+  numbers: 3v3
+  space: { court: half }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O2, team: offense }
+    - { id: O3, team: offense }
+    - { id: D1, team: defense }
+    - { id: D2, team: defense }
+    - { id: D3, team: defense }
+  start: { type: check-ball, spot: top }
+  restart: { on_score: switch, on_stop: switch }
+  rotation: { type: none }
+  end: { type: score, target: 5 }
+base_rules: { two: 1, three: 1 }
+constraints:
+  - id: pick-a-rule
+    name: Losers pick
+    category: character
+    invites: [ownership, next-play-response]
+    preserves: [full-game-structure]
+    targets: [char.attitude]
+    rules:
+      - id: losers-choose
+        when: { game: end }
+        then: [ { choose: { by: losing-team, from: pool, count: 1, replaces: previous } } ]
+        judge: auto
+        say: "After each game, the losing team picks the next rule"
+pool:
+  - id: p-no-dribble-top
+    name: No dribbles above the break
+    category: environment
+    invites: [ball-movement]
+    preserves: [closeouts]
+    targets: [off.extend.extra-pass]
+    zones: [ { id: top-nd, kind: no-dribble, shape: { named: above-break } } ]
+    rules:
+      - { id: drib-top, label: Dribble up top, when: { event: dribble, zone: top-nd }, then: [ { turnover: true } ], judge: coach }
+  - id: p-paint-first
+    name: Paint touch before a three
+    category: task
+    invites: [drive-and-kick]
+    preserves: [help-defense]
+    targets: [off.extend.drive-and-kick]
+    rules:
+      - { id: three-needs-paint, label: Three, when: { event: make, value: 3 }, after: [ { event: paint-touch } ], then: [ { points: 2 } ], overrides: [base.three], judge: coach }
+  - id: p-stops-count
+    name: Stops count
+    category: character
+    invites: [defensive-effort]
+    preserves: [live-offense]
+    targets: [char.effort]
+    rules:
+      - { id: stop-plus, label: Stop, when: { event: stop }, then: [ { points: 1, to: defense } ], judge: coach }
+expect:
+  card: ["Basket = 1", "Three = 1", "After each game, the losing team picks the next rule"]

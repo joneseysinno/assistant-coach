@@ -1,0 +1,41 @@
+id: s03-coach-calls-coverage
+name: 2v2 Elbow Screen — Coach Calls the Coverage
+stage: team-based
+stress: { tests: "Hidden information; coach-controlled variable", result: needed-extension, decisions: [D-027] }
+format:
+  numbers: 2v2+1v1
+  space: { court: half }
+  roles:
+    - { id: O1, team: offense }
+    - { id: O4, team: offense }
+    - { id: O5, team: offense }
+    - { id: D1, team: defense }
+    - { id: D4, team: defense }
+    - { id: D5, team: defense }
+  start: { type: check-ball, spot: top }
+  restart: { on_score: switch, on_stop: switch }
+  rotation: { type: none }
+  end: { type: score, target: 7 }
+base_rules: { two: 1, three: 1 }
+dials:
+  coverage: { enum: [drop, hedge, switch], default: drop, live: true, visible_to: defense, label: "Coverage (shown to defense)" }
+constraints:
+  - id: read-the-coverage
+    name: Beat the coverage
+    category: task
+    invites: [read-screen-coverage]
+    preserves: [screen-defense, help-defense]
+    targets: [off.create.ball-screen, def.deny.screen-coverage]
+    rules:
+      - id: counter-score
+        label: Right counter
+        when: { event: make }
+        then: [ { points: 2 } ]
+        overrides: [base.two, base.three]
+        judge: coach
+        say: "Score with the right counter to the coverage = 2"
+reads: [read.ballscreen.drop, read.ballscreen.hedge, read.ballscreen.switch]
+expect:
+  card: ["Basket = 1", "Three = 1", "Score with the right counter to the coverage = 2"]
+  remote_extra: [coverage picker (drop / hedge / switch) — logged as dial.set before each possession]
+  board_hides: [coverage]

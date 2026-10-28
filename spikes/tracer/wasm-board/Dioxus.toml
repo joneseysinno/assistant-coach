@@ -1,0 +1,7 @@
+[application]
+name = "wasm-board"
+
+[web.app]
+title = "Tracer — wasm proof"
+# Served by the hub under /wasm/, so assets resolve to /wasm/assets/...
+base_path = "wasm"

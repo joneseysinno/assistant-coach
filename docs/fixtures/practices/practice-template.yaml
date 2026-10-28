@@ -1,0 +1,22 @@
+# S8 practice format. Copy to practice-01.yaml and fill with real games/roster (W3.4).
+id: pr-template
+date: 2026-11-03
+gym: gym-home
+start: "15:30"
+planned_minutes: 90
+policy: { overtime: firm, grace_s: 60, warn_s: 60 }
+transition_s: 60
+roster_present: []
+blocks:
+  - { id: b1, name: Warm-up 2v2, game: s08-cross-court-2v2, baskets: [S1, S2], minutes: 8, groups: { mode: random, team_size: 2 } }
+  - { id: b2, name: Closeout Attack, game: g-closeout-attack-3v3, baskets: [A], minutes: 12, groups: { mode: balanced, team_size: 3 }, prompt: "Where is the help coming from?" }
+  - { id: b9, name: Free-throw ladder, game: g-ft-ladder, baskets: [A, B], minutes: 6, protected: true }
+gyms:
+  - id: gym-home
+    name: Home gym
+    court: hs
+    baskets:
+      - { id: A,  label: "Main A", position: [0, 36.75], facing: 180 }
+      - { id: B,  label: "Main B", position: [0, -36.75], facing: 0 }
+      - { id: S1, label: "Side 1", position: [-19.75, 18], facing: 90 }
+      - { id: S2, label: "Side 2", position: [19.75, 18], facing: 270 }

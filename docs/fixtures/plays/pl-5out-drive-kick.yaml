@@ -1,0 +1,25 @@
+# FORMAT EXAMPLE — a generic 5-out drive-and-kick concept (a looping rule system), not the team's own.
+id: pl-5out-drive-kick
+name: 5-out Drive and Kick (concept)
+kind: concept
+court: half
+roles: [O1, O2, O3, O4, O5]
+states:
+  - { id: spread, label: 5-out spacing, ball: O1, at: { O1: [0, 24], O2: [-17, 15], O3: [17, 15], O4: [-21, 1], O5: [21, 1] } }
+  - { id: drive,  label: Drive to the paint, ball: O2, at: { O1: [0, 24], O2: [-5, 8], O3: [17, 15], O4: [-21, 1], O5: [21, 1] } }
+  - { id: kick,   label: Kick to the shooter, ball: O4, at: { O1: [-10, 22], O2: [-5, 8], O3: [17, 15], O4: [-21, 1], O5: [21, 1] } }
+transitions:
+  - { id: t-swing, from: spread, to: drive, actions: [ { pass: { from: O1, to: O2 } }, { dribble: { by: O2, to: [-5, 8] } } ], guard: null }
+  - { id: t-finish, from: drive, to: spread, actions: [ { shot: { by: O2 } } ], guard: read.help.stays }
+  - { id: t-kick,   from: drive, to: kick,   actions: [ { pass: { from: O2, to: O4 } } ], guard: read.help.steps-up }
+  - { id: t-reset,  from: kick,  to: spread, actions: [ { cut: { by: O2, to: [-17, 15] } } ], guard: read.closeout.short, timing: "shoot it, or attack again from the catch" }
+  - { id: t-attack, from: kick,  to: drive,  actions: [ { dribble: { by: O4, to: [-12, 4] } } ], guard: read.closeout.high-fast }
+trained_by:
+  read.help.stays: [s12-zone-restricted-defender]
+  read.help.steps-up: [s12-zone-restricted-defender, g-closeout-attack-3v3]
+  read.closeout.short: [g-closeout-attack-3v3]
+  read.closeout.high-fast: [g-closeout-attack-3v3]
+expect:
+  reads: [read.help.stays, read.help.steps-up, read.closeout.short, read.closeout.high-fast]
+  untrained: []
+  has_loop: true
